@@ -1,0 +1,61 @@
+---
+import SelectionRail from './SelectionRail.astro';
+const { lang } = Astro.props as { lang: 'en' | 'es' };
+const path = Astro.url.pathname;
+const casePage = path.includes('/proyectos/eventos/') || path.includes('/projects/local-events/');
+const demoPage = path.includes('/demo/facturas/');
+const languages = [
+  { code: 'en', name: 'English', href: casePage ? '/projects/local-events/' : demoPage ? '/demo/facturas/' : '/' },
+  { code: 'es', name: 'Español', href: casePage ? '/es/proyectos/eventos/' : demoPage ? '/es/demo/facturas/' : '/es/' }
+];
+---
+<div class="language-bar">
+  <nav class="radio-container" aria-label={lang === 'es' ? 'Idioma' : 'Language'}>
+    {languages.map(({ code, name, href }) => (
+      <a href={href} lang={code} hreflang={code} aria-current={lang === code ? 'page' : undefined}>{name}</a>
+    ))}
+    <SelectionRail />
+  </nav>
+</div>
+<script>
+  // Animate the incoming page so the language links can navigate immediately.
+  const previous = document.referrer && new URL(document.referrer);
+  const other = document.querySelector<HTMLAnchorElement>('.language-bar a:not([aria-current])');
+  if (other && previous && previous.origin === location.origin && previous.pathname === other.pathname &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const spanish = document.documentElement.lang === 'es';
+    document.querySelector('.language-bar .glider')?.animate(
+      [{transform: spanish ? 'translateY(0)' : 'translateY(100%)'},
+       {transform: spanish ? 'translateY(100%)' : 'translateY(0)'}],
+      {duration: 500, easing: 'cubic-bezier(.37,1.95,.66,.56)'}
+    );
+  }
+</script>
+<style>
+  /* Vertical glider adapted from quick-panther-98 by Smit-Prajapati (Uiverse, MIT). */
+  .language-bar { margin-inline-start:auto; }
+  .radio-container {
+    --main-color: #f7e479;
+    --total-radio: 2;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(8rem, 34vw);
+    padding-left: .5rem;
+    box-sizing: border-box;
+  }
+  .radio-container a {
+    position: relative;
+    z-index: 1;
+    padding: .45rem 1rem;
+    color: #bdc7c7;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color .3s ease-in-out;
+  }
+  a[aria-current] { color: var(--main-color); }
+  a:hover { color: #fff6c0; }
+  a:focus-visible { outline: 2px solid var(--main-color); outline-offset: -2px; }
+  .radio-container:has(a:nth-of-type(2)[aria-current]) { --rail-offset: 100%; }
+  @media (prefers-reduced-motion: reduce) { .radio-container a { transition: none; } }
+</style>

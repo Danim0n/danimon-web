@@ -1,0 +1,15 @@
+---
+import '../styles/text.css';
+import AnalyticsConsent from '../components/AnalyticsConsent.astro';
+
+import {content} from '../data/content';
+const {lang='en',title,description,noindex=false}=Astro.props as {lang?:'en'|'es';title?:string;description?:string;noindex?:boolean};
+const t=content[lang]; const path=Astro.url.pathname;
+const casePage=path.includes('/proyectos/eventos/')||path.includes('/projects/local-events/');
+const enPath=casePage?'/projects/local-events/':path==='/es/privacidad/'?'/privacy/':path.replace(/^\/es\//,'/');
+const esPath=casePage?'/es/proyectos/eventos/':enPath==='/privacy/'?'/es/privacidad/':'/es'+enPath;
+---
+<!doctype html><html lang={lang}><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="theme-color" content="#060b11"/><title>{title??t.title}</title><meta name="description" content={description??t.description}/>{noindex?<meta name="robots" content="noindex,follow"/>:<><link rel="canonical" href={`https://danimon.party${path}`}/><link rel="alternate" hreflang="en" href={new URL(enPath,Astro.site)}/><link rel="alternate" hreflang="es" href={new URL(esPath,Astro.site)}/><link rel="alternate" hreflang="x-default" href={new URL(enPath,Astro.site)}/></>}<link rel="icon" href="data:,"/><meta property="og:type" content="website"/><meta property="og:title" content={title??t.title}/><meta property="og:description" content={description??t.description}/><meta property="og:url" content={`https://danimon.party${path}`}/><meta property="og:locale" content={lang==='es'?'es_ES':'en_GB'}/><meta name="twitter:card" content="summary"/><script type="application/ld+json" set:html={JSON.stringify({'@context':'https://schema.org','@type':'Person',name:'Daniel Rosell Martín',jobTitle:t.role,url:'https://danimon.party',sameAs:['https://www.linkedin.com/in/daniel-rosell-mart%C3%ADn-703a561a0/']})}/></head><body><a class="skip" href="#main">{t.skip}</a><slot/><AnalyticsConsent lang={lang}/></body></html>
+
+
+

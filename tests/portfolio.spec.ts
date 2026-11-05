@@ -1,0 +1,50 @@
+import {expect, test} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+
+for (const lang of ['en','es']) for (const width of [360,1440]) {
+  test(`Plain portfolio in ${lang}, ${width}px`,async({page})=>{
+    await page.setViewportSize({width,height:900});
+    await page.goto(lang==='es'?'/es/':'/');
+    await expect(page.locator('html')).toHaveAttribute('lang',lang);
+    await expect(page.getByRole('heading',{level:1})).toHaveText('Daniel Rosell Martín');
+    await expect(page.locator('#projects h3')).toHaveCount(4);
+    await expect(page.locator('#about')).toContainText('2026');
+    await expect(page.locator('#stack')).toContainText('MySQL');
+    const toggle=page.locator('.profile-dock summary');
+    await toggle.hover();
+    await expect(page.locator('.profile-dock details')).toHaveAttribute('open','');
+    await page.getByRole('link',{name:'LinkedIn'}).hover();
+    await page.mouse.move(2,2);
+    await expect(page.locator('.profile-dock details')).not.toHaveAttribute('open','');
+    await toggle.focus(); await page.keyboard.press('Enter');
+    await expect(page.getByRole('link',{name:'LinkedIn'})).toHaveAttribute('href',/linkedin\.com\/in\/daniel/);
+    await expect(page.locator('.profile-dock .email')).toHaveAttribute('href','mailto:danirosellmartin@gmail.com');
+    await page.locator('.email').click();
+    await expect(page.locator('#mail-options')).toBeVisible();
+    await expect(page.getByRole('link',{name:'Gmail'})).toHaveAttribute('href',/to=danirosellmartin%40gmail.com/);
+    await expect(page.getByRole('link',{name:'Outlook.com'})).toHaveAttribute('href',/to=danirosellmartin%40gmail.com/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#mail-options')).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(toggle).toBeFocused();
+    await expect(page.locator('#stack img')).toHaveCount(11);
+    await page.locator('#stack').scrollIntoViewIfNeeded();
+    await expect.poll(() => page.locator('#stack img').evaluateAll(logos =>
+      logos.every(logo => (logo as HTMLImageElement).naturalWidth > 0))).toBe(true);
+    await expect(page.locator('img:not(#stack img,.profile-dock img,#invoice-feature img),canvas:not(.fluid-background),svg:not(.email svg),video')).toHaveCount(0);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    expect((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa']).analyze()).violations).toEqual([]);
+    // A visitor can return to the selector while an old section anchor remains in the URL.
+    await page.goto((lang==='es'?'/es/':'/')+'#projects');
+    await page.evaluate(()=>window.scrollTo(0,0));
+    await page.getByRole('link',{name:lang==='es'?'English':'Español'}).click();
+    await expect(page.locator('html')).toHaveAttribute('lang',lang==='es'?'en':'es');
+    await page.waitForLoadState('networkidle');
+    expect(await page.evaluate(()=>[location.hash,scrollY])).toEqual(['',0]);
+  });
+}
+
+
+
+
+

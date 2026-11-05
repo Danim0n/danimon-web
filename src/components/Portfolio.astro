@@ -1,0 +1,69 @@
+---
+import InvoiceFeature from './InvoiceFeature.astro';
+import PortfolioAppBar from './PortfolioAppBar.astro';
+import ProjectWheel from './ProjectWheel.astro';
+import FluidBackground from './FluidBackground.astro';
+import Page from '../layouts/Page.astro';
+import FloatingProfile from './FloatingProfile.astro';
+import { content } from '../data/content';
+
+const { lang = 'en' } = Astro.props as { lang?: 'en' | 'es' };
+const es = lang === 'es';
+const t = content[lang];
+const technologies = [
+  ['Flutter','flutter'], ['Dart','dart'], ['Python','python'], ['FastAPI','fastapi'],
+  ['PHP','php'], ['HTML','html5'], ['CSS','css3'],
+  ['SQL','sql'], ['MySQL','mysql'], ['Git','git'], ['JavaScript','javascript']
+];
+---
+<Page lang={lang}>
+  <PortfolioAppBar lang={lang} home />
+  <FluidBackground />
+  <main class="portfolio-scrollport" tabindex="0">
+    <section id="main" tabindex="-1" class="intro" aria-labelledby="name">
+      <div>
+        <p class="role">{t.greeting}</p>
+        <h1 id="name">Daniel <span>Rosell Martín</span></h1>
+      </div>
+      <div class="intro-copy">
+        <h2 class="intro-title">{t.role}</h2>
+        <p class="intro-focus">{t.focus}</p>
+        <p>{t.intro}</p>
+        <p class="availability">{es?'Me interesan oportunidades de desarrollo móvil con Flutter y de automatización con Python.':'I’m interested in opportunities to build mobile apps with Flutter and automation tools with Python.'}</p>
+        <a href="#projects">{es?'Explorar proyectos':'Explore projects'} <span aria-hidden="true">↘</span></a>
+      </div>
+    </section>
+    <ProjectWheel lang={lang} />
+    <InvoiceFeature es={es} />
+    <div class="dossier">
+    <section id="about">
+      <h2>{es ? 'Perfil y formación' : 'Profile and education'}</h2>
+      <p>{t.aboutText}</p>
+      <p>{t.education}</p>
+    </section>
+    <section id="stack">
+      <h2>{es ? 'Tecnologías' : 'Technologies'}</h2>
+      <ul class="technologies">
+        {technologies.map(([name, icon]) => <li>
+          <span class="logo"><img src={`/tech/${icon}.svg`} alt="" width="32" height="32" loading="lazy" /></span>
+          {name}
+        </li>)}
+      </ul>
+    </section>
+    </div>
+  </main>
+  <FloatingProfile es={es} />
+</Page>
+<style>
+  .intro-copy .availability {font-size:1rem;line-height:1.4;color:#c8e2dc}
+  .intro-title { margin:0 0 .5rem; font:600 clamp(1.3rem,2vw,1.8rem)/1.2 "Space Grotesk",sans-serif; }
+  .intro-copy .intro-focus { color:#b9e5da; font:500 .92rem/1.6 ui-monospace,monospace; letter-spacing:0; margin-bottom:1.15rem; }
+  .technologies { display:grid; grid-template-columns:repeat(auto-fit,minmax(7.1rem,1fr)); gap:.85rem; padding:0; list-style:none; }
+  .technologies li { display:flex; align-items:center; gap:.65rem; }
+  .logo { display:grid; place-items:center; width:2.75rem; height:2.75rem; background:#f0f6f5; border-radius:.55rem; flex:none; }
+  .logo img { object-fit:contain; }
+</style>
+
+
+
+

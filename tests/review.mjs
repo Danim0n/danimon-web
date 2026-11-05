@@ -1,0 +1,4 @@
+import {chromium} from '@playwright/test'; import path from 'node:path';
+const b=await chromium.launch({executablePath:path.resolve('.cache/ms-playwright/chromium-1248/chrome-win64/chrome.exe'),headless:true});for(const lang of ['','es/']){let p=await b.newPage({viewport:{width:360,height:844}});await p.goto('http://127.0.0.1:4325/'+lang,{waitUntil:'networkidle'});console.log(lang||'en',await p.locator('a,button,summary').evaluateAll(es=>es.filter(e=>{let r=e.getBoundingClientRect();return r.width&&r.height&&(r.width<24||r.height<24)}).map(e=>({text:e.textContent.trim().slice(0,20),w:Math.round(e.getBoundingClientRect().width),h:Math.round(e.getBoundingClientRect().height)}))));console.log('overflow',await p.evaluate(()=>[document.documentElement.clientWidth,document.documentElement.scrollWidth]));await p.screenshot({path:'output/qa/materia/review-final-'+(lang?'es':'en')+'-360.png'});await p.close()}await b.close();
+
+

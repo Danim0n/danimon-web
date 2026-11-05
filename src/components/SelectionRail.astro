@@ -1,0 +1,30 @@
+<!-- Vertical glider adapted from quick-panther-98 by Smit-Prajapati (Uiverse, MIT). -->
+<span class="glider-container" aria-hidden="true"><span class="glider"></span></span>
+<style>
+  .glider-container {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 1px;
+    background: linear-gradient(0deg, transparent, #50504a, transparent);
+    pointer-events: none;
+  }
+  .glider {
+    position: relative;
+    display: block;
+    height: calc(100% / var(--total-radio));
+    background: linear-gradient(0deg, transparent, #f7e479, transparent);
+    opacity: var(--rail-opacity, 1);
+    transform: translateY(var(--rail-offset, 0%));
+    transition: transform .5s cubic-bezier(.37,1.95,.66,.56), opacity .18s;
+  }
+  .glider::before, .glider::after { content: ''; position: absolute; left: 0; }
+  .glider::before {
+    height: 60%; width: 300%; top: 50%; transform: translateY(-50%);
+    background: #f7e479; filter: blur(10px);
+  }
+  .glider::after {
+    width: min(8rem, 34vw); height: 100%;
+    background: linear-gradient(90deg, #f7e4791c, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) { .glider { transition: none; } }
+</style>

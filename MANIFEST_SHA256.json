@@ -1,0 +1,18 @@
+{
+  ".agents/skills/danimon-visual-quality/SKILL.md": "e2a68fea320dd140afd8c6ecc6d0d3a8807db81e2bf9069bfa5c29a20cad2949",
+  ".codex/agents/art_director.toml": "4f2d3294bf8a7e7eefec8d25cd2f70e0cb13e2030929f0e86d417f7644bc6562",
+  ".codex/agents/creative_engineer.toml": "fb107213f238c2e3c6f5199c806e539207c3fb127c1a9cefd7cf36a6041606c0",
+  ".codex/agents/quality_reviewer.toml": "6bad9b6a1fda27d512420d70d1fe05849444567200d98fe06ca78f22ab575a57",
+  ".codex/agents/skill_scout.toml": "718493e81f07ced9bab05987bc6e8017939a631f27d3314eef4c217e9aaf9985",
+  ".codex/config.toml": "fd72818c020c182c7be24f0e791977b15e6b2845917dd75317c87a8282d1f167",
+  "AGENTS.md": "89871c311defa2aa5e26c9578861be41e7e76a4cb574b968bb6085b57c563401",
+  "README_ES.md": "e6759758bb45275a177066ff9a5b96835fdbe3960808711c80a665538a61ba28",
+  "RESUME_PROMPT.md": "d4c157078724475fbeb9ebd8a382371afc9f86ef751f37787a20f5d32d98a7cc",
+  "START_PROMPT.md": "ba8dc17acedde47545b51d4dec1c984248825b64ec781b6823942d10896ae54f",
+  "STATE.md": "9d65c6e199028ad226eae502d344e5fbe850475caffdef820d8e07c2548b5cae",
+  "VALIDATION.md": "90e9deedc99b0e12c636e6596d84c90a2e5a5f78dc28c25f8e7272ea6fd6df54",
+  "docs/MODEL_ROUTING.md": "87d56d710b2980e41b2638a5a19f05c182036d2adaca13597c51e865a0079132",
+  "docs/PROJECT_BRIEF.md": "4d0a2b8c2e8666d86ca44c1e20f500c5f189563313209e4b0bd8e57b4cccdc72",
+  "docs/SKILLS_SELECTION.md": "b55c2ca3a745acdcc527ea8040b188ab9326f754c670811685ed465a9fc5410a",
+  "tools/Install-FrontendSkill.ps1": "0124c362a72302b8a93e89f023fd5d07b7d715d1204324ba0b1b3dd1f4238b85"
+}

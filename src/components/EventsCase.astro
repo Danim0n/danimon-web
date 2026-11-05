@@ -1,0 +1,36 @@
+---
+import Page from '../layouts/Page.astro';
+import PortfolioAppBar from './PortfolioAppBar.astro';
+const {lang} = Astro.props as {lang:'en'|'es'};
+const es=lang==='es';
+const title=es?'Una app para descubrir eventos locales':'An app for discovering local events';
+const stages=es?[
+  ['Entrada','Ingesta de información de eventos.'],
+  ['Procesamiento','Un modelo local ayuda a procesar los datos.'],
+  ['Revisión','Un flujo de revisión en Supabase.']
+]:[
+  ['Input','Ingesting local event information.'],
+  ['Processing','A local model helps process the data.'],
+  ['Review','A review workflow in Supabase.']
+];
+---
+<Page lang={lang} title={title+' · Daniel Rosell Martín'} description={es?'Proyecto de desarrollo móvil con Flutter, Dart, Supabase e IA local.':'A mobile development project using Flutter, Dart, Supabase and local AI.'}>
+<PortfolioAppBar lang={lang} />
+<main class="portfolio-scrollport" tabindex="0"><div id="main" class="case" tabindex="-1">
+  <a href={es?'/es/#projects':'/#projects'}>{es?'← Volver a proyectos':'← Back to projects'}</a>
+  <p class="category">Flutter / Dart / Supabase</p>
+  <h1>{title}</h1>
+  <p class="lead">{es?'Desarrollé una aplicación móvil para descubrir fiestas y eventos cercanos. El trabajo también incluye lo que ocurre antes de que un evento llegue a la app: recoger la información, procesarla y revisarla.':'I developed a mobile app for discovering nearby festivals and events. The project also covers the work that happens before an event reaches the app: collecting the information, processing it and reviewing it.'}</p>
+  <figure><figcaption>{es?'Cómo se procesa un evento':'How an event is processed'}</figcaption>
+    <ol>{stages.map(([label,body])=><li><strong>{label}</strong><p>{body}</p></li>)}</ol>
+  </figure>
+  <section><h2>{es?'Qué construí':'What I built'}</h2>
+    <p>{es?'Usé Flutter y Dart para la aplicación móvil. Con Supabase implementé el flujo de ingesta y revisión de eventos e incorporé procesamiento asistido por un modelo de IA local. También añadí pruebas automatizadas.':'I used Flutter and Dart for the mobile app. With Supabase, I implemented event ingestion and review, integrated processing assisted by a local AI model, and added automated tests.'}</p>
+  </section>
+  <section><h2>{es?'Una decisión técnica':'A technical decision'}</h2>
+    <p>{es?'Separé el procesamiento asistido por IA de la revisión. Así, la propuesta del modelo es un paso intermedio del flujo y se puede revisar antes de utilizar los datos.':'I separated AI-assisted processing from review. The model’s output is an intermediate step in the workflow, so the data can be reviewed before it is used.'}</p>
+  </section>
+</div></main></Page>
+<style>
+.case{max-width:52rem;margin:clamp(2rem,5vw,5rem) auto}.case h1,.case h2{font:400 clamp(2.4rem,5vw,4.6rem)/1.02 "Instrument Serif",Georgia,serif;letter-spacing:-.03em}.case h1{max-width:18ch;margin:.5rem 0 1.5rem}.case h2{font-size:2.25rem}.lead{font-size:clamp(1.1rem,2vw,1.4rem);max-width:52ch}.category,figcaption{color:#b9e5da}.category{margin:2.5rem 0 0}.case section p{max-width:64ch}.case figure{margin:2rem 0;padding:1.35rem;border:1px solid #42635f;border-radius:.7rem;background:#0e2227}.case ol{margin:1rem 0 0;list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}.case li{border-top:2px solid #65ab9b;padding-top:.7rem}.case li p{font-size:.94rem;margin:.4rem 0}@media(max-width:600px){.case ol{grid-template-columns:1fr}}
+</style>

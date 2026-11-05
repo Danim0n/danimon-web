@@ -1,0 +1,55 @@
+---
+import Page from '../layouts/Page.astro';
+const { lang, kind } = Astro.props as { lang: 'en' | 'es'; kind: 'privacy' | 'cookies' };
+const es = lang === 'es';
+const title = kind === 'privacy' ? (es ? 'Privacidad' : 'Privacy') : (es ? 'Cookies y almacenamiento' : 'Cookies and storage');
+---
+<Page lang={lang} title={title + ' · Daniel Rosell Martín'} description={es ? 'Información sobre privacidad y analítica opcional del portfolio.' : 'Privacy information and optional portfolio analytics.'}>
+  <main id="main" class="legal">
+    <a href={es ? '/es/' : '/'}>← {es ? 'Volver al portfolio' : 'Back to portfolio'}</a>
+    <h1>{title}</h1>
+    {es ? <>
+      <p>Daniel Rosell Martín es responsable de este portfolio. Para consultas de privacidad y ejercer tus derechos, escribe a <a href="mailto:danirosellmartin@gmail.com">danirosellmartin@gmail.com</a>.</p>
+      <h2>Qué puedes elegir</h2>
+      <p>La medición es opcional y requiere tu consentimiento. Puedes aceptar o rechazar, elegir por separado estadísticas de visitas e interacciones, y retirar el permiso desde «Privacidad» en cualquier página. Rechazar permite seguir usando el sitio.</p>
+      <h2>Visitas y rendimiento</h2>
+      <p>Cloudflare Web Analytics puede medir páginas, origen del tráfico, país aproximado, navegador y rendimiento. Su configuración se mantiene desactivada hasta verificar la instalación y autorizar esta categoría. El beacon se omite en páginas cuya dirección incluye parámetros o fragmentos para reducir la exposición de información sensible.</p>
+      <h2>Interacciones</h2>
+      <p>PostHog Cloud EU puede recibir nombres de eventos y propiedades limitadas, como el proyecto, el idioma, hitos de desplazamiento o clics de contacto. La medición utiliza un identificador aleatorio por pestaña tras aceptar, que se renueva después de 30 minutos de inactividad. No se vincula a una cuenta. Las grabaciones de sesiones están desactivadas.</p>
+      <p>Los campos escritos en la demo, su factura, el contenido del correo y las direcciones completas de navegación no forman parte de los eventos. Un clic de CV representa una intención de descargar. No acredita descarga completada ni lectura del documento.</p>
+      <h2>Conservación y proveedores</h2>
+      <p>La decisión de consentimiento se guarda en este navegador durante 180 días. El identificador de sesión se conserva en la pestaña y se elimina al retirar el permiso de interacciones. Los proveedores reciben la dirección IP en la conexión de red. PostHog tiene desactivados los perfiles personales y el enriquecimiento geográfico en los eventos del sitio.</p>
+      <p>La retención de eventos en las cuentas, los contratos con encargados y cualquier transferencia internacional deben configurarse y revisarse antes de activar la recogida real. La región europea de PostHog se usa para la ingesta. Cloudflare puede procesar datos mediante su red internacional.</p>
+      <h2>Tus derechos</h2>
+      <p>Puedes solicitar acceso, rectificación, supresión, limitación, oposición o portabilidad cuando sean aplicables y retirar el consentimiento para futuras mediciones. También puedes presentar una reclamación ante la <a href="https://www.aepd.es/" target="_blank" rel="noopener noreferrer">AEPD</a>. La retirada detiene nuevas mediciones opcionales; las solicitudes ya enviadas no pueden retirarse desde el navegador.</p>
+      <h2>Almacenamiento en el navegador</h2>
+      <p><code>danimon.analytics.consent.v1</code> guarda las dos preferencias y su fecha en localStorage. <code>danimon.analytics.session.v1</code> guarda el identificador aleatorio y la última actividad en sessionStorage, solo con permiso. El SDK de PostHog utiliza memoria. La demo puede guardar una revisión de factura cuando pulsas «Guardar en este dispositivo», con una opción propia para borrarla.</p>
+      <p>Si el navegador transmite DNT o Global Privacy Control, la medición opcional permanece desactivada. Sin JavaScript, los proveedores de analítica de esta integración no se cargan.</p>
+    </> : <>
+      <p>Daniel Rosell Martín is responsible for this portfolio. For privacy enquiries and to exercise your rights, contact <a href="mailto:danirosellmartin@gmail.com">danirosellmartin@gmail.com</a>.</p>
+      <h2>Your choice</h2>
+      <p>Analytics is optional and requires your consent. Accept or reject, select visit statistics and interaction analytics separately, or withdraw using the Privacy button on any page. Declining allows you to continue using the website.</p>
+      <h2>Visits and performance</h2>
+      <p>Cloudflare Web Analytics can measure pages, traffic origins, approximate country, browser and web performance. It stays disabled until the installation has been verified and you allow this category. The beacon is omitted on addresses containing query strings or fragments to reduce disclosure of sensitive information.</p>
+      <h2>Interactions</h2>
+      <p>PostHog Cloud EU can receive event names and limited properties such as the project, language, scrolling milestones and contact clicks. After consent, a random per-tab identifier is renewed after 30 minutes of inactivity. It is not linked to an account. Session recordings are disabled.</p>
+      <p>Demo field values, invoices, email content and complete browsing addresses are excluded from these events. A CV click measures an intention to download, not a completed download or reading.</p>
+      <h2>Retention and providers</h2>
+      <p>Your consent choice is stored in this browser for 180 days. The random session identifier remains in the tab and is removed when interaction consent is withdrawn. Providers receive an IP address as part of the network connection. Personal profiles and event geographical enrichment are disabled in PostHog.</p>
+      <p>Account event retention, processor agreements and any international transfers must be configured and reviewed before real collection is enabled. PostHog ingestion uses its European region. Cloudflare may process data through its international network.</p>
+      <h2>Your rights</h2>
+      <p>You may request access, correction, erasure, restriction, objection or portability where applicable and withdraw consent for future measurement. You can also complain to the <a href="https://www.aepd.es/" target="_blank" rel="noopener noreferrer">Spanish data protection authority</a>. Withdrawal stops further optional collection; requests already sent cannot be recalled from the browser.</p>
+      <h2>Browser storage</h2>
+      <p><code>danimon.analytics.consent.v1</code> stores both choices and their date in localStorage. <code>danimon.analytics.session.v1</code> stores a random identifier and last activity in sessionStorage, only with permission. The PostHog SDK uses memory. The demo separately saves an invoice review when you choose Save on this device and provides a control to remove it.</p>
+      <p>If your browser sends DNT or Global Privacy Control, optional analytics stays disabled. Without JavaScript, the analytics providers in this integration are not loaded.</p>
+    </>}
+    <p><a href={es ? '/es/privacidad/' : '/privacy/'}>{es ? 'Privacidad' : 'Privacy'}</a> · <a href={es ? '/es/cookies/' : '/cookies/'}>Cookies</a></p>
+    <p>{es ? 'Actualizado el 5 de noviembre de 2026.' : 'Updated 5 November 2026.'}</p>
+  </main>
+</Page>
+<style>
+  .legal { max-width: 48rem; margin: 3rem auto 7rem; overflow-wrap: anywhere; }
+  h1,h2 { font-family: "Instrument Serif",Georgia,serif; font-weight: 400; }
+  h1 { font-size: clamp(3rem,7vw,5rem); } h2 { font-size: 2rem; }
+  p { line-height: 1.7; } code { font-size: .85em; }
+</style>

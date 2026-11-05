@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1200" viewBox="0 0 1000 1200">
+  <rect width="1000" height="1200" fill="#fffefb"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#20262b">
+    <text x="76" y="91" font-size="15" letter-spacing="3">DOCUMENTO FICTICIO · FICTIONAL DOCUMENT</text>
+    <text x="76" y="160" font-size="45" font-weight="700">FACTURA / INVOICE</text>
+    <text x="76" y="202" font-size="20">FN-2026-042</text>
+    <path d="M76 230 H924" stroke="#20262b" stroke-width="2"/>
+    <text x="76" y="280" font-size="17" fill="#5b6268">PROVEEDOR / SUPPLIER</text>
+    <text x="76" y="322" font-size="33" font-weight="700">Estudio Norte S.L.</text>
+    <text x="76" y="359" font-size="20">Calle del Taller, 24 · Madrid</text>
+    <text x="76" y="434" font-size="24">Fecha / Date: 04/11/2026</text>
+    <text x="76" y="485" font-size="17" fill="#5b6268">CLIENTE / CUSTOMER</text>
+    <text x="76" y="521" font-size="24">Proyecto de ejemplo</text>
+    <path d="M76 564 H924" stroke="#c4c6c8"/>
+    <text x="76" y="605" font-size="18" font-weight="700">CONCEPTO / DESCRIPTION</text>
+    <text x="756" y="605" font-size="18" font-weight="700">IMPORTE</text>
+    <text x="76" y="663" font-size="24">Desarrollo de software</text>
+    <text x="756" y="663" font-size="24">1.200,00</text>
+    <text x="76" y="702" font-size="19" fill="#5b6268">Servicios de demostracion</text>
+    <path d="M76 743 H924" stroke="#c4c6c8"/>
+    <text x="500" y="793" font-size="23">Subtotal</text>
+    <text x="756" y="793" font-size="23">1.200,00</text>
+    <text x="500" y="838" font-size="23">IVA 21%</text>
+    <text x="771" y="838" font-size="23">252,00</text>
+    <path d="M76 877 H924" stroke="#20262b" stroke-width="2"/>
+    <text x="500" y="934" font-size="31" font-weight="700">TOTAL EUR</text>
+    <text x="738" y="934" font-size="31" font-weight="700">1.452,00</text>
+    <path d="M76 974 H924" stroke="#20262b" stroke-width="2"/>
+    <text x="76" y="1040" font-size="19">Muestra creada para esta demo. Sin validez fiscal.</text>
+    <text x="76" y="1074" font-size="19">Sample created for this demo. Not a valid tax invoice.</text>
+    <text x="76" y="1134" font-size="15" fill="#5b6268">DATOS INVENTADOS / INVENTED DATA</text>
+  </g>
+</svg>

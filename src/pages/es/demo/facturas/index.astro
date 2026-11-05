@@ -1,0 +1,6 @@
+---
+import Page from '../../../../layouts/Page.astro';
+import InvoiceDemo from '../../../../components/InvoiceDemo.astro';
+import {invoiceCopy} from '../../../../scripts/invoice-demo/copy';
+---
+<Page lang="es" title={invoiceCopy.es.title} description={invoiceCopy.es.intro}><InvoiceDemo lang="es"/></Page>

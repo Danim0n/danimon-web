@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://danimon.party/sitemap.xml

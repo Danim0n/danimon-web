@@ -1,0 +1,272 @@
+---
+import LanguageSwitch from "./LanguageSwitch.astro";
+
+const { lang, home = false } = Astro.props as {
+  lang: "en" | "es";
+  home?: boolean;
+};
+const es = lang === "es";
+const homePath = es ? "/es/" : "/";
+const sections = [
+  ["main", es ? "Inicio" : "Home"],
+  ["projects", es ? "Proyectos" : "Projects"],
+  ["stack", es ? "Tecnologías" : "Technologies"],
+  ["about", es ? "Perfil" : "Profile"],
+];
+---
+
+<header class="portfolio-appbar" data-home={home || undefined}>
+  <a class="wordmark" href={homePath}>danimon.party</a>
+  <nav class="radio-inputs" aria-label={es ? "Secciones" : "Sections"}>
+    {
+      sections.map(([id, label]) => (
+        <a
+          class="radio"
+          href={(home ? "" : homePath) + "#" + id}
+          aria-current={!home && id === "projects" ? "location" : undefined}
+        >
+          <span class="name">{label}</span>
+        </a>
+      ))
+    }
+  </nav>
+  <LanguageSwitch lang={lang} />
+</header>
+<script>
+  const bar = document.querySelector<HTMLElement>(".portfolio-appbar");
+  if (bar) {
+    const scrollport = document.querySelector<HTMLElement>(".portfolio-scrollport")!;
+    const links = Array.from(bar.querySelectorAll<HTMLAnchorElement>(".radio"));
+    const sections = bar.hasAttribute("data-home")
+      ? links.map((link) => document.getElementById(link.hash.slice(1))!)
+      : [];
+
+    function updateViewport() {
+      if (!sections.length) return;
+      const readingLine = scrollport.getBoundingClientRect().top + 24;
+      const atBottom =
+        scrollport.scrollTop + scrollport.clientHeight >= scrollport.scrollHeight - 2;
+      const positions = sections.map((section) =>
+        Math.round(section.getBoundingClientRect().top),
+      );
+      const passed = positions.filter((top) => top <= readingLine || atBottom);
+      const currentTop = passed.length ? Math.max(...passed) : positions[0];
+      // Profile and technologies share a row on wide screens. Honour the chosen link.
+      const selected = links.findIndex(
+        (link, i) => link.hash === location.hash && positions[i] === currentTop,
+      );
+      const active = selected >= 0 ? selected : positions.indexOf(currentTop);
+      links.forEach((link, i) => {
+        if (i === active) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
+    }
+
+    let scheduled = false;
+    function scheduleUpdate() {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        updateViewport();
+      });
+    }
+    scheduleUpdate();
+    new ResizeObserver(scheduleUpdate).observe(scrollport);
+    scrollport.addEventListener("scroll", scheduleUpdate, { passive: true });
+    // Wheel gestures can also start over the stationary tabs.
+    bar.addEventListener("wheel", (event) => {
+      if (event.ctrlKey || !event.deltaY) return;
+      const unit = event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? scrollport.clientHeight
+        : event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : 1;
+      scrollport.scrollBy(0, event.deltaY * unit);
+    }, { passive: true });
+    document.addEventListener("keydown", (event) => {
+      if (event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey) return;
+      if (event.target !== document.body && !bar!.contains(event.target as Node)) return;
+      // Hand the first scroll key to the native reading area when it has no focus yet.
+      if (["PageDown", "PageUp", "Home", "End", "ArrowDown", "ArrowUp", " "].includes(event.key))
+        scrollport.focus({ preventScroll: true });
+    });
+    window.addEventListener("hashchange", scheduleUpdate);
+    window.addEventListener("pageshow", scheduleUpdate);
+  }
+</script>
+<style>
+  /* Clip at the tab baseline; the gradient overlays the scrolling content below it. */
+  :global(body:has(> .portfolio-appbar)) {
+    --page-gutter: max(clamp(1.25rem, 5vw, 5rem), calc((100% - 70rem) / 2));
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100vh;
+    height: 100dvh;
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
+  }
+  :global(.portfolio-scrollport) {
+    min-height: 0;
+    overflow: auto;
+    isolation: isolate;
+    scroll-padding-top: 1rem;
+    padding: 0 var(--page-gutter) 6rem;
+  }
+  :global(body:has(.portfolio-appbar) > .skip:focus-visible) {
+    position: fixed;
+    top: 0.4rem;
+    left: 0.5rem;
+    z-index: 30;
+    padding: 0.5rem;
+    background: #112424;
+  }
+  .portfolio-appbar {
+    /* Opacidad del cristal: 0% es transparente y 100% es opaco. */
+    --tab-top-opacity: 93%;
+    --tab-middle-opacity: 87.5%;
+    --tab-base-opacity: 89%;
+    --tab-fade-height: 2.65rem;
+    --tab-seam: rgb(173 232 220 / var(--tab-base-opacity));
+    position: relative;
+    margin-inline: var(--page-gutter);
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 4vw, 3.5rem);
+    padding: 0.35rem clamp(0.65rem, 2vw, 1.5rem) 0;
+    text-shadow:
+      0 1px 3px #061014,
+      0 0 5px #061014;
+  }
+  .portfolio-appbar::after {
+    content: "";
+    position: absolute;
+    inset: 100% 0 auto;
+    height: var(--tab-fade-height);
+    /* Paint to both viewport edges without widening the scrollable area. */
+    /* Conserva el primer cuarto de la franja y desvanece antes el resto. */
+    border-image-source: linear-gradient(
+      var(--tab-seam),
+      color-mix(in srgb, var(--tab-seam) 55%, transparent) 25%,
+      color-mix(in srgb, var(--tab-seam) 15%, transparent) 55%,
+      color-mix(in srgb, var(--tab-seam) 4%, transparent) 80%,
+      transparent
+    );
+    border-image-slice: 0 fill;
+    border-image-outset: 0 100vw;
+    pointer-events: none;
+  }
+  /* Curved section tabs adapted from Spacious74 on Uiverse. */
+  .radio-inputs {
+    display: flex;
+    align-items: end;
+    align-self: stretch;
+    position: relative;
+    padding: 0.3rem 0.55rem 0;
+  }
+  .radio {
+    position: relative;
+    color: #d8e7e4;
+    text-decoration: none;
+  }
+  .name {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 2.75rem;
+    padding-inline: clamp(0.5rem, 1.2vw, 1rem);
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-size: 0.9rem;
+    color: var(--tab-ink, inherit);
+    font-weight: var(--tab-weight, 550);
+    background: var(--tab-bg, transparent);
+    text-shadow: var(--tab-shadow, inherit);
+  }
+  .radio:hover {
+    color: white;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+  .radio[aria-current],
+  :global(html:not(:has(:target)))
+    .radio-inputs:not(:has([aria-current]))
+    [href="#main"],
+  :global(html:has(#main:target))
+    .radio-inputs:not(:has([aria-current]))
+    [href="#main"],
+  :global(html:has(#projects:target))
+    .radio-inputs:not(:has([aria-current]))
+    [href="#projects"],
+  :global(html:has(#stack:target))
+    .radio-inputs:not(:has([aria-current]))
+    [href="#stack"],
+  :global(html:has(#about:target))
+    .radio-inputs:not(:has([aria-current]))
+    [href="#about"] {
+    --tab-bg: linear-gradient(
+      rgb(221 250 243 / var(--tab-top-opacity)),
+      rgb(197 232 225 / var(--tab-middle-opacity)) 64%,
+      var(--tab-seam)
+    );
+    --tab-ink: #112d2a;
+    --tab-shadow: none;
+    --tab-weight: 650;
+    --tab-corner: "";
+  }
+  .name::before,
+  .name::after {
+    content: var(--tab-corner, none);
+    position: absolute;
+    bottom: 0;
+    width: 9px;
+    height: 9px;
+    pointer-events: none;
+  }
+  .name::before {
+    right: 100%;
+    background: radial-gradient(
+      circle at 0 0,
+      transparent 8px,
+      var(--tab-seam) 9px
+    );
+  }
+  .name::after {
+    left: 100%;
+    background: radial-gradient(
+      circle at 100% 0,
+      transparent 8px,
+      var(--tab-seam) 9px
+    );
+  }
+  .radio:focus-visible {
+    outline: 2px solid #f7e479;
+    outline-offset: -2px;
+    z-index: 1;
+  }
+  @media (max-width: 740px) {
+    :global(.portfolio-scrollport) { padding-bottom: 15rem; }
+    .portfolio-appbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.15rem 0.5rem;
+      margin-inline: calc(var(--page-gutter) - 0.55rem);
+      padding: 0.15rem 0.55rem 0;
+    }
+    .radio-inputs {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      padding: 0.2rem 0.45rem 0;
+    }
+    .radio {
+      flex: 1;
+    }
+    .name {
+      padding-inline: 0.2rem;
+      font-size: clamp(0.76rem, 3vw, 0.9rem);
+    }
+  }
+  @media print {
+    :global(body:has(> .portfolio-appbar)), :global(.portfolio-scrollport) {
+      display: block; height: auto; overflow: visible;
+    }
+  }
+</style>

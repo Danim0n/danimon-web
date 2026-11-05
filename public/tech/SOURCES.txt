@@ -1,0 +1,4 @@
+Devicon v2.16.0: https://github.com/devicons/devicon/tree/v2.16.0/icons
+Original variants: flutter, dart, python, fastapi, php, javascript, html5, css3, mysql, git.
+License included in DEVICON-LICENSE.txt. Brand names and marks belong to their respective owners.
+sql.svg: original generic database symbol for the SQL language.

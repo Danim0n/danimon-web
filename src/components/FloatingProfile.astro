@@ -1,0 +1,431 @@
+---
+import SelectionRail from "./SelectionRail.astro";
+import { linkedin } from "../data/content";
+const { es } = Astro.props as { es: boolean };
+const email = "danirosellmartin@gmail.com";
+const recipient = encodeURIComponent(email);
+---
+
+<aside
+  class="profile-dock"
+  aria-label={es ? "Perfil de contacto" : "Contact profile"}
+>
+  <details>
+    <summary
+      aria-label={es
+        ? "Tarjeta de Daniel Rosell Martín"
+        : "Daniel Rosell Martín’s profile card"}
+      aria-controls="profile-panel"
+    >
+      <img src="/profile/foto.png" alt="" width="54" height="54" />
+    </summary>
+    <div id="profile-panel" class="profile-panel">
+      <a class="email" href={`mailto:${email}`} aria-label={es ? "Enviar correo a Daniel" : "Email Daniel"}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m3 6 9 7 9-7"/>
+        </svg>
+      </a>
+      <section class="mail-options" id="mail-options" aria-labelledby="mail-heading" hidden>
+        <div class="mail-surface">
+          <strong id="mail-heading">{es ? "Abrir con" : "Open with"}</strong>
+          <div class="mail-rows">
+            <a href={`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}`} target="_blank" rel="noopener noreferrer">Gmail</a>
+            <a href={`https://outlook.live.com/mail/0/deeplink/compose?to=${recipient}`} target="_blank" rel="noopener noreferrer">Outlook.com</a>
+            <a href={`mailto:${email}`}>{es ? "Mi aplicación de correo" : "My email app"}</a>
+            <button type="button" data-copy={email} data-success={es ? "Dirección copiada" : "Address copied"}>{es ? "Copiar dirección" : "Copy email address"}</button>
+            <SelectionRail />
+          </div>
+          <small aria-live="polite">{email}</small>
+        </div>
+      </section>
+      <div class="sheet">
+        <div class="bio">
+        <strong>Daniel Rosell Martín</strong>
+        <p>
+          {
+            es
+              ? "Desarrollador de software. Creo apps móviles y servicios backend."
+              : "Software developer. I build mobile apps and backend services."
+          }
+        </p>
+        </div>
+        <div class="actions">
+          <a href={linkedin} target="_blank" rel="noopener noreferrer"
+            ><img
+              src="/profile/linkedin.svg"
+              alt=""
+              width="21"
+              height="21"
+            />LinkedIn</a
+          >
+          <a class="cv-download" href="/cv/daniel-rosell-martin.pdf" download="Daniel-Rosell-Martin-CV.pdf" aria-label={es ? "Descargar CV en PDF" : "Download CV in Spanish (PDF)"}>CV ↓</a>
+        </div>
+      </div>
+    </div>
+  </details>
+</aside>
+<script>
+  import { trackEvent } from "../lib/analytics";
+  const dock = document.querySelector<HTMLDetailsElement>(
+    ".profile-dock details",
+  );
+  if (dock) {
+    const trigger = dock.querySelector("summary")!;
+    const envelope = dock.querySelector<HTMLAnchorElement>(".email")!;
+    const choices = dock.querySelector<HTMLElement>(".mail-options")!;
+    const copy = choices.querySelector("button")!;
+    const status = choices.querySelector("small")!;
+    function showChoices(show: boolean) {
+      choices.inert = !show;
+      choices.toggleAttribute("data-visible", show);
+      envelope.setAttribute("aria-expanded", String(show));
+      status.textContent = copy.dataset.copy!;
+    }
+    envelope.setAttribute("role", "button");
+    envelope.setAttribute("aria-controls", choices.id);
+    showChoices(false);
+    choices.hidden = false;
+    envelope.addEventListener("click", event => {
+      event.preventDefault();
+      showChoices(choices.inert);
+    });
+    envelope.addEventListener("keydown", event => {
+      if (event.key === " ") { event.preventDefault(); envelope.click(); }
+    });
+    copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(copy.dataset.copy!);
+        status.textContent = copy.dataset.success!;
+        trackEvent('email_copy_clicked', { source: 'email-options', result: 'copied' });
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(status);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        if (selection?.toString() === copy.dataset.copy) trackEvent('email_copy_clicked', { source: 'email-options', result: 'selected' });
+      }
+    });
+    dock.addEventListener("toggle", () => { if (!dock.open) showChoices(false); });
+    let hovering = false;
+    dock.addEventListener("pointerenter", (event) => {
+      if (event.pointerType === "mouse") {
+        hovering = true;
+        dock.open = true;
+      }
+    });
+    dock.addEventListener("pointerleave", (event) => {
+      if (event.pointerType === "mouse") {
+        hovering = false;
+        showChoices(false);
+        dock.open = false;
+      }
+    });
+    trigger.addEventListener("click", (event) => {
+      if (hovering && event.detail > 0) event.preventDefault();
+    });
+    dock.addEventListener("focusout", (event) => {
+      if (!hovering && !dock.contains(event.relatedTarget as Node))
+        dock.open = false;
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && dock.open) {
+        if (!choices.inert) { showChoices(false); envelope.focus(); return; }
+        dock.open = false;
+        trigger.focus();
+      }
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (
+        dock.open &&
+        event.target instanceof Node &&
+        !dock.contains(event.target)
+      )
+        dock.open = false;
+    });
+  }
+</script>
+<style>
+  .profile-dock {
+    position: fixed;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    z-index: 20;
+    pointer-events: none;
+    color: #f1fffd;
+  }
+  details {
+    --size: min(340px, calc(100vw - 2rem), calc(100dvh - 2rem));
+    width: var(--size);
+    height: var(--size);
+    position: relative;
+    pointer-events: auto;
+    transform-origin: bottom right;
+    transform: scale(0.6);
+    border-radius: 32px;
+    background: linear-gradient(140deg, #183c40, #224852 65%, #34384b);
+    box-shadow: 0 10px 32px #0007;
+    transition:
+      transform 0.5s ease-in-out,
+      border-radius 0.5s ease-in-out;
+  }
+  details[open] {
+    transform: scale(1);
+    border-top-left-radius: 55px;
+  }
+  summary {
+    position: absolute;
+    inset: 3px;
+    z-index: 1;
+    display: block;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 0 solid #488c86;
+    border-radius: 29px;
+    background: #bde9df;
+    cursor: pointer;
+    list-style: none;
+    /* Smit-Prajapati's original timing lets the lower panel retreat first. */
+    transition: all 0.5s ease-in-out 0.2s;
+    width: calc(100% - 6px);
+    height: calc(100% - 6px);
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: 45% 20%;
+    transition: transform 0.5s ease-in-out;
+  }
+  details[open] summary {
+    top: 10px;
+    left: 10px;
+    width: 36%;
+    height: 36%;
+    border-width: 7px;
+    border-radius: 50%;
+    z-index: 3;
+    box-shadow: 0 4px 8px #001a;
+    transition: all 0.5s ease-in-out, z-index 0.5s ease-in-out 0.1s;
+  }
+  details[open] summary img {
+    transform: scale(2.5);
+    transition-delay: 0.5s;
+  }
+  @media (hover: hover) {
+    details[open] summary:hover {
+      transform: scale(1.3);
+      border-radius: 0;
+    }
+  }
+  summary:focus-visible {
+    outline: 3px solid #c8fff4;
+    outline-offset: 3px;
+  }
+  details::details-content {
+    content-visibility: visible;
+  }
+  .sheet {
+    position: absolute;
+    inset: 80% 3px 3px;
+    z-index: 2;
+    overflow: hidden;
+    border-radius: 29px;
+    background: linear-gradient(145deg, #347871, #153941 85%);
+    box-shadow: inset 0 1px 5px #18383890;
+    transition:
+      top 0.5s cubic-bezier(0.645, 0.045, 0.355, 1),
+      border-radius 0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+    pointer-events: none;
+  }
+  details[open] .sheet {
+    top: 20%;
+    border-radius: 80px 29px 29px 29px;
+    transition-delay: 0.2s;
+    pointer-events: auto;
+  }
+  .email {
+    display: none;
+    position: absolute;
+    right: 1rem;
+    top: .45rem;
+    z-index: 4;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    color: #abf3e6;
+    border-radius: 50%;
+  }
+  details[open] .email { display: grid; }
+  .email:hover, .email:focus-visible { background: #ffffff14; color: white; }
+  .mail-options {
+    position: absolute;
+    z-index: 5;
+    inset: auto 0 100%;
+    margin: 0;
+    padding: 0 0 .5rem;
+    visibility: hidden;
+    pointer-events: none;
+    transition: visibility 0s .5s;
+  }
+  .mail-options[data-visible] {
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+  .mail-surface {
+    box-sizing: border-box;
+    max-height: calc(100dvh - var(--size) - max(1rem, env(safe-area-inset-bottom)) - max(1rem, env(safe-area-inset-top)) - .5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: .5rem;
+    border: 1px solid #54807d;
+    border-radius: 1.25rem;
+    background: #102c31;
+    box-shadow: 0 8px 24px #00181c66;
+    transform-origin: 89% bottom;
+    transform: scale(.16);
+    opacity: 0;
+    transition: transform .5s ease-in-out, opacity .4s ease-in-out;
+  }
+  .mail-options[data-visible] .mail-surface {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .mail-rows {
+    --total-radio: 4;
+    --rail-opacity: 0;
+    --rail-offset: var(--hover-offset, var(--focus-offset, 0%));
+    display: grid;
+    grid-auto-rows: 1fr;
+    position: relative;
+    padding-left: .5rem;
+  }
+  .mail-rows:has(:focus-visible) { --rail-opacity: 1; }
+  .mail-rows:has(:nth-child(2):focus-visible) { --focus-offset: 100%; }
+  .mail-rows:has(:nth-child(3):focus-visible) { --focus-offset: 200%; }
+  .mail-rows:has(:nth-child(4):focus-visible) { --focus-offset: 300%; }
+  .mail-options strong, .mail-options small {
+    display: block;
+    padding: .5rem .75rem;
+  }
+  .mail-options strong { color: #eafffa; }
+  .mail-options a, .mail-options button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: .5rem .75rem;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: .65rem;
+    color: #e0f4f0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color .3s ease-in-out;
+  }
+  @media (hover: hover) {
+    .mail-rows:has(:is(a,button):hover) { --rail-opacity: 1; }
+    .mail-rows:has(:nth-child(1):hover) { --hover-offset: 0%; }
+    .mail-rows:has(:nth-child(2):hover) { --hover-offset: 100%; }
+    .mail-rows:has(:nth-child(3):hover) { --hover-offset: 200%; }
+    .mail-rows:has(:nth-child(4):hover) { --hover-offset: 300%; }
+    .mail-rows :is(a,button):hover { color: #f7e479; }
+  }
+  .mail-rows :is(a,button):focus-visible {
+    color: #f7e479;
+    outline: 2px solid #f7e479;
+    outline-offset: -2px;
+  }
+  .mail-options small {
+    border-top: 1px solid #3d5c5e;
+    overflow-wrap: anywhere;
+    color: #c4deda;
+  }
+  @media (max-height: 620px) {
+    details[open]:has(.mail-options[data-visible]) {
+      --compact-height: 7rem;
+      height: var(--compact-height);
+    }
+    .mail-surface {
+      max-height: calc(100dvh - var(--compact-height) - max(1rem, env(safe-area-inset-bottom)) - max(1rem, env(safe-area-inset-top)) - .5rem);
+    }
+    details[open]:has(.mail-options[data-visible]) {
+      & summary { width: 44px; height: 44px; border-width: 3px; }
+      & .sheet { inset: 3px; border-radius: 29px; transition: none; }
+      & .bio { top: 1.65rem; bottom: auto; height: auto; transform: translateY(-50%); left: 4rem; right: 4rem; }
+      & .bio strong { font-size: 1rem; line-height: 1.15; }
+      & .bio p { display: none; }
+    }
+  }
+  .bio,
+  .actions {
+    position: absolute;
+    left: 1.1rem;
+    right: 1.1rem;
+  }
+  .bio {
+    bottom: 0;
+    height: calc(var(--size) * .52);
+    text-align: left;
+  }
+  .sheet strong {
+    display: block;
+    font-size: 1.18rem;
+  }
+  .sheet p {
+    color: #d9eeeb;
+    font-size: 0.92rem;
+    line-height: 1.3;
+    margin: .45rem 0 0;
+  }
+  .actions {
+    bottom: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+  }
+  .actions a,
+  .actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 0 0.8rem;
+    border-radius: 2rem;
+    font: 600 0.85rem system-ui;
+  }
+  .actions a {
+    background: #e3fbf7;
+    color: #123337;
+    text-decoration: none;
+  }
+  .actions a:hover {
+    text-decoration: underline;
+  }
+  .actions .cv-download {
+    border: 1px solid #83b8b2;
+    background: transparent;
+    color: #d8fbef;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .mail-surface, .mail-options { transition: none; }
+    .mail-options :is(a,button) { transition: none; }
+    details,
+    summary,
+    summary img,
+    .sheet {
+      transition: none !important;
+    }
+  }
+</style>
+

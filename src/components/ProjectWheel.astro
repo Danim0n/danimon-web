@@ -1,0 +1,65 @@
+---
+import { content } from '../data/content';
+const {lang} = Astro.props as {lang:'en'|'es'};
+const es = lang === 'es';
+const casePath = es ? '/es/proyectos/eventos/' : '/projects/local-events/';
+const demoPath = es ? '/es/demo/facturas/' : '/demo/facturas/';
+const cards = [
+  [es?'Eventos locales':'Local events', es?'Aplicación':'Application', content[lang].projects[0].desc,'⌖',casePath],
+  [es?'Automatización y backend':'Automation & backend','Backend',content[lang].projects[1].desc,'{ }'],
+  ['danimon.party','Web',es?'Mi portfolio personal, disponible en español e inglés.':'My personal portfolio, available in Spanish and English.', '</>'],
+  [es?'Lector de facturas':'Invoice reader','OCR',es?'Lee una factura de ejemplo, revisa cada campo y guarda los datos.':'Read a sample invoice, review each field and save the data.','≡',demoPath]
+];
+---
+<section id="projects" class="projects-wheel">
+  <h2>{es?'Proyectos':'Projects'}</h2>
+  <p class="wheel-hint" hidden>{es?'Arrastra para girar. Pasa el ratón o toca una tarjeta para leerla.':'Drag to rotate. Hover over or tap a card to read it.'}</p>
+  <div class="wheel-stage">
+    {cards.map(([title,category,description,symbol,href],index)=>
+      <article class="wheel-item" data-linked={href?true:undefined} style={`--accent:${['#ff9966','#68d7cf','#ad91ff','#a5d9a0'][index]}`}>
+        <div class="flip-shell">
+          <div class="face cover-face"><span class="card-symbol" aria-hidden="true">{symbol}</span><h3>{title}</h3></div>
+          <div class="face detail-face"><span class="badge">{category}</span><div class="note"><strong aria-hidden="true">{title}</strong><p>{description}</p></div></div>
+        </div>
+        <button class="card-hit" hidden aria-label={es?`Detalles de ${title}`:`Details for ${title}`} aria-expanded="false"></button>
+        {href && <a class="project-link" href={href}>{index===0?(es?'Ver proyecto':'View project'):(es?'Probar demo':'Try demo')} ↗</a>}
+      </article>)}
+  </div>
+  <p class="case-shortcut"><a href={casePath}>{es?'Leer la ficha de eventos locales':'Read the local events case study'} ↗</a></p>
+</section>
+<script src="../scripts/project-wheel.ts"></script>
+<style>
+  .case-shortcut{margin:.75rem 0;text-align:center}
+  .ready .project-link{display:none}
+  .ready .wheel-item[data-open] .project-link{display:grid;position:absolute;bottom:6px;left:10px;right:10px;min-height:36px;place-items:center;color:#effff9;background:#132b29;border-radius:4px;font-size:.85rem;z-index:2;text-underline-offset:3px}
+  .ready .wheel-item[data-linked] .detail-face{padding-bottom:48px}
+  .wheel-item {margin-bottom:1.2rem}
+  .card-symbol,.badge,.note strong{display:none}
+  .wheel-hint{font-size:.875rem;color:#d2e2e1}
+  .ready .wheel-stage{position:relative;width:min(94vw,840px);margin-left:50%;transform:translateX(-50%);height:clamp(410px,calc(48vw + 80px),520px);overflow:hidden;perspective:1000px;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none}
+  .ready .wheel-stage:active{cursor:grabbing}
+  .ready .wheel-item{position:absolute;left:50%;top:50%;width:clamp(142px,20vw,168px);height:clamp(202px,27vw,225px);margin:0;transform-style:preserve-3d}
+  .ready .flip-shell{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .38s ease}
+  .ready .wheel-item[data-open] .flip-shell{transform:rotateY(180deg)}
+  .ready .face{box-sizing:border-box;position:absolute;inset:0;border-radius:7px;overflow:hidden;backface-visibility:hidden;background:#161819;color:#fff}
+  .ready .cover-face{
+    display:grid;align-content:center;justify-items:center;gap:1.4rem;padding:14px;text-align:center;
+    background-color:color-mix(in srgb,var(--accent) 17%,transparent);
+    background-image:linear-gradient(138deg,#ffffff40,transparent 35%,#07101445 70%,#ffffff21);
+    border:1px solid color-mix(in srgb,var(--accent) 72%,white);
+    box-shadow:inset 0 1px 2px #ffffff80,inset 0 0 22px color-mix(in srgb,var(--accent) 28%,transparent);
+    backdrop-filter:blur(7px) saturate(1.2);
+    text-shadow:0 1px 4px #081015;
+  }
+  .ready .card-symbol{display:block;font:600 2.6rem/1 monospace;color:var(--accent)}
+  .ready h3{margin:0;font-size:1.05rem}
+  .ready .detail-face{transform:rotateY(180deg);padding:10px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--accent);background:radial-gradient(ellipse at 27% 35%,var(--accent),transparent 54%),radial-gradient(ellipse at 90% 19%,#61454b,transparent 46%),#17191b}
+  .ready .badge,.ready .note strong{display:block}
+  .ready .badge{align-self:flex-start;border-radius:1em;padding:2px 9px;background:#151617;color:white;font-size:.75rem}
+  .ready .note{background:#101213eb;border-radius:4px;padding:9px}
+  .ready .note p{font-size:.85rem;line-height:1.35;margin:.4em 0 0}
+  .ready .card-hit{position:absolute;inset:0;width:100%;height:100%;border:none;background:none;border-radius:7px;cursor:inherit}
+  @media(max-width:600px){.ready .wheel-stage{height:400px}.ready .note p{font-size:.78rem}}
+  @media(prefers-reduced-motion:reduce){.ready .flip-shell{transition:none}}
+</style>
+

@@ -1,0 +1,15 @@
+---
+const {es}=Astro.props as {es:boolean};
+const route=es?'/es/demo/facturas/':'/demo/facturas/';
+---
+<section id="invoice-feature" aria-labelledby="invoice-feature-title">
+  <figure><img src={es?'/media/invoice-review-es.webp':'/media/invoice-review-en.webp'} width="1100" height="780" loading="lazy" alt={es?'Captura de la demo con una factura ficticia y sus campos extraídos.':'The working demo showing a fictional invoice and its extracted fields.'}/><figcaption>{es?'Captura de la demo · datos ficticios':'Demo screenshot · fictional data'}</figcaption></figure>
+  <div><p class="category">{es?'Demo interactiva':'Interactive demo'}</p><h2 id="invoice-feature-title">{es?'De factura a datos revisados':'From invoice to reviewed data'}</h2>
+  <p>{es?'El lector reconoce el texto de una factura de ejemplo en tu navegador. Comprueba de dónde sale cada valor, corrígelo y guarda el resultado.':'The reader recognises text in a sample invoice in your browser. Check the source of each value, correct it and save the result.'}</p>
+  <a href={route}>{es?'Probar con un ejemplo':'Try a sample invoice'} ↗</a>
+  </div>
+</section>
+<style>
+section{margin-top:3rem;display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(1.2rem,4vw,4rem);align-items:center;padding-bottom:3rem;border-bottom:1px solid #ffffff36}figure{margin:0}img{display:block;width:100%;height:auto;border-radius:.45rem;border:1px solid #42635f}figcaption,.category{font-size:.85rem;color:#b9e5da}figcaption{margin-top:.5rem}h2{font:400 clamp(2.5rem,4.4vw,4rem)/1.02 "Instrument Serif",Georgia,serif;letter-spacing:-.035em;margin:.6rem 0}p{max-width:45ch}a{text-underline-offset:.3em}@media(max-width:740px){section{grid-template-columns:1fr}section>div{grid-row:1}}
+</style>
+

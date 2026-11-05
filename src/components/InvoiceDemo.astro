@@ -1,0 +1,112 @@
+---
+import {invoiceCopy, type InvoiceLanguage} from '../scripts/invoice-demo/copy';
+const {lang = 'en'} = Astro.props as {lang?: InvoiceLanguage};
+const t = invoiceCopy[lang];
+---
+<main id="main" class="invoice-demo" data-invoice-demo data-lang={lang}>
+  <nav class="demo-nav" aria-label={lang === 'es' ? 'Navegación de la demo' : 'Demo navigation'}>
+    <a href={lang === 'es' ? '/es/#projects' : '/#projects'}>← {t.back}</a>
+    <a href={lang === 'es' ? '/demo/facturas/' : '/es/demo/facturas/'} lang={lang === 'es' ? 'en' : 'es'}>{t.language} ↗</a>
+  </nav>
+  <header class="demo-header">
+    <p class="eyebrow">{t.eyebrow}</p>
+    <h1>{t.heading}</h1>
+    <p class="intro-text">{t.intro}</p>
+  </header>
+  <div class="demo-workspace">
+    <section class="document-pane" aria-labelledby="invoice-document-heading">
+      <div class="pane-heading"><h2 id="invoice-document-heading">{t.sample}</h2><span aria-hidden="true">↙</span></div>
+      <figure class="invoice-figure">
+        <div class="invoice-paper" id="invoice-source" role="group" aria-label={t.sourceDocument}>
+          <img src="/invoice-demo/factura-ficticia.png" width="1000" height="1200" alt={t.imageAlt} fetchpriority="high"/>
+          <span class="source-highlight" data-highlight hidden aria-hidden="true"></span>
+        </div>
+        <figcaption>{t.fictional}</figcaption>
+      </figure>
+      <details class="transcript"><summary>{t.transcript}</summary><p>{t.invoiceText}</p></details>
+    </section>
+    <section class="review-pane" aria-labelledby="invoice-review-heading">
+      <p class="eyebrow">{t.step}</p>
+      <h2 id="invoice-review-heading">{t.panelTitle}</h2>
+      <div class="start-row">
+        <button class="primary" data-start disabled>{t.start} <span aria-hidden="true">↗</span></button>
+        <button class="text-button" data-cancel hidden>{t.cancel}</button>
+      </div>
+      <p class="model-note">{t.modelNote}</p>
+      <progress data-progress max="1" value="0" aria-label={t.progress} hidden></progress>
+      <p class="status" data-status role="status" aria-live="polite" aria-atomic="true">{t.ready}</p>
+      <noscript><p>{t.nojs}</p></noscript>
+      <form data-review-form>
+        <fieldset disabled data-fields>
+          <legend class="sr-only">{t.step}</legend>
+          {(['supplier','date','total'] as const).map(field => <div class="review-field" data-field-row={field}>
+            <div class="field-heading"><label for={`invoice-${field}`}>{t[field]}</label><span class="field-state" data-field-state={field}></span></div>
+            <input id={`invoice-${field}`} name={field} type={field === 'date' ? 'date' : field === 'total' ? 'number' : 'text'} min={field === 'total' ? '0' : undefined} step={field === 'total' ? '.01' : undefined} max={field === 'total' ? '999999999.99' : undefined} maxlength={field === 'supplier' ? '120' : undefined} required autocomplete="off" placeholder={field === 'date' ? undefined : t.pending} aria-describedby="invoice-source-excerpt"/>
+            <button type="button" class="source-button" data-source={field} aria-label={`${t.source}: ${t[field]}`} aria-controls="invoice-source" aria-pressed="false">{t.source} <span aria-hidden="true">↖</span></button>
+          </div>)}
+        </fieldset>
+        <p class="source-excerpt" id="invoice-source-excerpt" data-source-excerpt aria-live="polite">{t.sourceHint}</p>
+        <div class="review-actions">
+          <button type="submit" class="secondary" data-save disabled>{t.save}</button>
+          <button type="button" class="text-button" data-download disabled>{t.download} ↓</button>
+        </div>
+        <button type="button" class="text-button clear-button" data-clear hidden>{t.clear}</button>
+      </form>
+      <p class="privacy">{t.privacy}</p>
+    </section>
+  </div>
+  <aside class="method" aria-labelledby="invoice-method-heading"><h2 id="invoice-method-heading">{t.methodTitle}</h2><div><p>{t.method}</p><details><summary>{t.raw}</summary><pre data-raw-ocr>{t.rawPending}</pre></details></div></aside>
+</main>
+<script>
+  import '../scripts/invoice-demo/controller';
+</script>
+<style>
+  :global(body:has(.invoice-demo)){max-width:84rem;padding:0 clamp(1.1rem,4.5vw,5rem) 4rem;}
+  .invoice-demo{--ink:#f3f4ed;--muted:#aebbbf;--line:#ffffff29;--accent:#b5efc5;color:var(--ink);}
+  .demo-nav{display:flex;justify-content:space-between;gap:1.5rem;padding:1.5rem 0;border-bottom:1px solid var(--line);font-size:.86rem;}
+  .demo-nav a{color:var(--ink);text-underline-offset:.3em;}
+  .demo-header{padding:clamp(2.8rem,6vw,5.3rem) 0 2.8rem;}
+  .eyebrow{font-size:.7rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 .9rem;}
+  h1{font:400 clamp(3.4rem,7.8vw,7.1rem)/.98 'Instrument Serif',Georgia,serif;letter-spacing:-.04em;margin:0 0 1.3rem;}
+  .intro-text{font-size:clamp(1rem,1.7vw,1.2rem);line-height:1.6;max-width:57ch;color:#c6d1d2;margin:0;}
+  .demo-workspace{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(1.5rem,4vw,4rem);padding-bottom:3rem;align-items:start;}
+  .pane-heading{display:flex;justify-content:space-between;align-items:center;padding:1.1rem 0;border-top:1px solid var(--line);}
+  .pane-heading h2{font-size:.9rem;font-weight:450;margin:0;}.pane-heading>span{color:var(--accent);font-size:1.4rem;}
+  .invoice-figure{margin:0;background:#273138;padding:clamp(.8rem,2.1vw,2rem);border:1px solid #ffffff0c;}
+  .invoice-paper{position:relative;box-shadow:0 .8rem 2rem #0004;}
+  .invoice-paper img{display:block;width:100%;height:auto;}
+  .source-highlight{position:absolute;box-sizing:border-box;border:2px solid #24703b;background:#78df8545;box-shadow:0 0 0 4px #a3f8b42b;pointer-events:none;}
+  figcaption{margin:.8rem 0 0;font-size:.68rem;letter-spacing:.025em;color:#c0ccce;}
+  details{font-size:.82rem;color:var(--muted);line-height:1.7;}summary{cursor:pointer;text-underline-offset:.2em;}details p{max-width:58ch;}
+  .transcript{margin-top:.7rem;}
+  .review-pane{padding:1.3rem 0 0;border-top:1px solid var(--line);}
+  .review-pane h2{font:400 clamp(2rem,3.4vw,3rem)/1.12 'Instrument Serif',Georgia,serif;letter-spacing:-.02em;margin:0 0 1.6rem;}
+  button,input{font:inherit;}button{cursor:pointer;}button:disabled{cursor:not-allowed;opacity:.45;}
+  button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px;}
+  .start-row{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem 1rem;}
+  .primary,.secondary{padding:.85rem 1.05rem;border:1px solid var(--accent);border-radius:2px;font-size:.88rem;line-height:1.35;}
+  .primary{display:flex;align-items:center;gap:2rem;background:var(--accent);color:#102318;min-height:3rem;font-weight:600;}
+  .primary span{font-size:1.2rem;}.primary:hover:not(:disabled){background:#d0f7d9;}
+  .secondary{background:transparent;color:var(--accent);}.secondary:hover:not(:disabled){background:#b5efc511;}
+  .text-button,.source-button{background:none;border:0;padding:.6rem 0;color:var(--ink);font-size:.78rem;text-decoration:underline;text-underline-offset:.25em;min-height:2.75rem;}
+  .model-note{font-size:.72rem;color:var(--muted);margin:.75rem 0 0;}
+  .status{font-size:.8rem;min-height:2.8em;line-height:1.6;margin:.9rem 0 1rem;color:#c5d8d2;}.status[data-error]{color:#ffc3a6;}
+  progress{width:100%;height:.25rem;margin:1rem 0 0;accent-color:var(--accent);}
+  fieldset{border:0;margin:0;padding:0;min-width:0;}
+  .review-field{display:grid;grid-template-columns:1fr auto;gap:.25rem 1rem;padding:1rem 0 .8rem;border-top:1px solid var(--line);}
+  .field-heading{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+  label{font-size:.74rem;color:var(--muted);}.field-state{font-size:.66rem;color:var(--accent);}
+  input{width:100%;min-width:0;box-sizing:border-box;border:0;border-bottom:1px solid #ffffff30;background:transparent;padding:.45rem 0;color:var(--ink);font-size:clamp(1rem,1.6vw,1.22rem);border-radius:0;}
+  input:disabled{opacity:.55;}input::placeholder{color:#849496;}.source-button{align-self:end;color:var(--accent);white-space:nowrap;}
+  .source-button[aria-pressed=true]{text-decoration-thickness:2px;}.review-field:focus-within{border-top-color:var(--accent);}
+  .source-excerpt{border-left:2px solid #72977a;padding:.2rem 0 .2rem .8rem;font-size:.74rem;line-height:1.6;color:#bcd0c4;min-height:3.2em;margin:1.2rem 0;overflow-wrap:anywhere;}
+  .review-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem 1.3rem;}.clear-button{color:var(--muted);font-size:.71rem;}
+  .privacy{font-size:.7rem;line-height:1.7;color:var(--muted);margin:1rem 0 0;max-width:60ch;}
+  .method{display:grid;grid-template-columns:1fr 1.3fr;gap:2rem;border-top:1px solid var(--line);padding:2rem 0;}
+  .method h2{font-size:1.1rem;font-weight:450;margin:0;}.method p{font-size:.84rem;line-height:1.75;color:var(--muted);margin:0 0 1rem;max-width:65ch;}
+  pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.72rem;line-height:1.6;padding:1rem;background:#ffffff06;border:1px solid var(--line);}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+  [hidden]{display:none!important;}
+  @media(max-width:760px){.demo-workspace{grid-template-columns:1fr;}.review-pane{grid-row:1;}.document-pane{grid-row:2;}.method{grid-template-columns:1fr;gap:1rem;}.demo-header{padding-bottom:2rem;}.invoice-figure{max-width:32rem;margin-inline:auto;}.source-button{font-size:.72rem;}.primary{gap:1rem;}.review-pane h2{margin-bottom:1.1rem;}}
+  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;}}
+</style>
