@@ -66,6 +66,7 @@ function mountWheel(root: HTMLElement) {
     if(e.button!==0 || !e.isPrimary || (e.target instanceof Element && e.target.closest('a')))return;
     const card=cardAt(e.target);
     skipClick=false;gesture={id:e.pointerId,x:e.clientX,angle,card,moved:false};
+    if (card >= 0 && e.pointerType === 'mouse') recordProjectDetails(card);
     if(card<0){hover=pinned=-1;}
     faces();
   });

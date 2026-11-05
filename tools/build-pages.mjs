@@ -6,6 +6,9 @@ process.env.WRANGLER_SEND_METRICS = 'false';
 process.env.WRANGLER_LOG_PATH ||= './output/build-logs';
 // Pages reads runtime bindings from the root config, not from the JS bundle.
 const runtime = JSON.parse(await readFile('wrangler.jsonc', 'utf8'));
+for (const [name, value] of Object.entries(runtime.vars ?? {}))
+  if (name.startsWith('PUBLIC_') && process.env[name] === undefined)
+    process.env[name] = String(value);
 const database = runtime.d1_databases?.find(binding => binding.binding === 'COUNTERS');
 if (!database?.database_id || runtime.vars?.COUNTERS_ENABLED !== 'true')
   throw new Error('Pages runtime requires the configured COUNTERS database binding.');

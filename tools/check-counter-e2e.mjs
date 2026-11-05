@@ -1,4 +1,4 @@
-import { Miniflare } from 'miniflare';
+import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import assert from 'node:assert/strict';
@@ -6,7 +6,7 @@ process.env.PLAYWRIGHT_BROWSERS_PATH ||= process.cwd()+'/.cache/ms-playwright';
 const {chromium} = await import('@playwright/test');
 const site=resolve('output/analytics-test-dist'), persist=await mkdtemp(resolve('output/qa/cloudflare-only/d1-e2e-'));
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.pdf':'application/pdf'};
-const server = new Miniflare({modules:true,scriptPath:'output/worker-test-build/index.js',compatibilityDate:'2026-08-06',host:'127.0.0.1',port:4334,d1Databases:['COUNTERS'],d1Persist:persist,
+const server = new Miniflare({...convertV4MiniflareOptions({modules:true,scriptPath:'output/worker-test-build/index.js',compatibilityDate:'2026-08-06',host:'127.0.0.1',port:4334,d1Databases:['COUNTERS'],d1Persist:persist,
   bindings:{PUBLIC_ORIGIN:'http://127.0.0.1:4334',COUNTERS_ENABLED:'true'},
   serviceBindings:{ASSETS:async request=>{
     const pathname=decodeURIComponent(new URL(request.url).pathname);
@@ -15,7 +15,7 @@ const server = new Miniflare({modules:true,scriptPath:'output/worker-test-build/
     try { return new Response(await readFile(path),{headers:{'Content-Type':mime[extname(path)]||'application/octet-stream'}}); }
     catch { return new Response('Not found',{status:404}); }
   }}
-});
+}), resourcePersistencePath:persist});
 let browser;
 try {
   const db=await server.getD1Database('COUNTERS');
@@ -63,5 +63,3 @@ try {
   const output={condition:'Chromium headless localhost, test-mode static assets, local Miniflare Worker+D1, external requests blocked',download:download.suggestedFilename(),external,failures,rows};
   await writeFile('output/qa/cloudflare-only/e2e-worker-d1.json',JSON.stringify(output,null,2)); console.log(JSON.stringify(output,null,2));
 } finally {await browser?.close();await server.dispose();}
-
-

@@ -2,7 +2,7 @@ import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdtemp, mkdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
-import { Miniflare } from 'miniflare';
+import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 let runtime, database, worker;
 const origin = 'https://danimon.party';
@@ -11,11 +11,11 @@ before(async () => {
   const testRoot = resolve('output/qa/cloudflare-only');
   await mkdir(testRoot, {recursive:true});
   const d1Path = await mkdtemp(join(testRoot, 'd1-test-'));
-  runtime = new Miniflare({
+  runtime = new Miniflare({...convertV4MiniflareOptions({
     modules: true, scriptPath: 'output/worker-test-build/index.js', compatibilityDate: '2026-08-06',
     bindings: { PUBLIC_ORIGIN: origin, COUNTERS_ENABLED: 'true' }, d1Databases: ['COUNTERS'], d1Persist: d1Path,
     serviceBindings: { ASSETS: request => new Response('PDF or page', { status: request.headers.has('Range') ? 206 : 200 }) },
-  });
+  }), resourcePersistencePath:d1Path});
   database = await runtime.getD1Database('COUNTERS');
   await database.prepare(await readFile('migrations/0001_counters.sql', 'utf8')).run();
   // dispatchFetch preserves the incoming URL and Origin for same-origin checks.
@@ -74,6 +74,8 @@ test('privacy signals produce no row or cookie', async () => {
     const result = await send([event], headers);
     assert.equal(result.status, 204);
     assert.equal(result.headers.get('Set-Cookie'), null);
+    assert.equal(result.headers.get('NEL'), '{"max_age":0}');
+    assert.equal(result.headers.get('Report-To'), null);
   }
   assert.equal((await rows()).results.length, 0);
 });
@@ -108,11 +110,11 @@ test('disabled counters and missing D1 never prevent assets from loading', async
     { PUBLIC_ORIGIN: origin, COUNTERS_ENABLED: 'false' },
     { PUBLIC_ORIGIN: origin, COUNTERS_ENABLED: 'true' },
   ]) {
-    const isolated = new Miniflare({
+    const isolated = new Miniflare(convertV4MiniflareOptions({
       modules:true, scriptPath:'output/worker-test-build/index.js', compatibilityDate:'2026-08-06',
       bindings,
       serviceBindings:{ ASSETS: () => new Response('asset', {status:200}) },
-    });
+    }));
     try {
       assert.equal((await isolated.dispatchFetch(origin + '/')).status,200);
       const result = await isolated.dispatchFetch(origin + '/api/interactions', {

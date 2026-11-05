@@ -1,3 +1,8 @@
+# Disable browser network-error reports supplied by the hosting layer.
+/*
+  NEL: {"max_age":0}
+  ! Report-To
+
 # Preserve HTML so the proxy does not automatically insert another beacon.
 /
   Cache-Control: public, max-age=0, must-revalidate, no-transform

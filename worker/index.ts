@@ -18,6 +18,7 @@ function response(status: number): Response {
   return new Response(null, { status, headers: {
     'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
+    'NEL': '{"max_age":0}',
   } });
 }
 function budgetAvailable(): boolean {
@@ -89,7 +90,10 @@ export default {
         // HTTP 200 response prepared, not a completed transfer or document reading.
         context.waitUntil(add(env, [{ page: 'cv-document', language: 'es', counter: 'cv_response_served', project: 'none' }]).catch(() => {}));
       }
-      return asset;
+      const headers = new Headers(asset.headers);
+      headers.set('NEL', '{"max_age":0}');
+      headers.delete('Report-To');
+      return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
     } catch { return response(503); }
   },
 };

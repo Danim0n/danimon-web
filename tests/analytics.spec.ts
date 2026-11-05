@@ -194,3 +194,29 @@ test('hover reveals a project without emitting a details counter', async ({page}
   expect(events.filter(e => e.counter === 'project_details_revealed')).toEqual([]);
   expect(external).toEqual([]);
 });
+
+test('mouse hover does not count; click reveals once and later drag does not duplicate', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const {events,external} = await watch(page);
+  await page.goto('/#projects');
+  const card = page.locator('.wheel-item').first();
+  await card.hover();
+  await expect(card).toHaveAttribute('data-open','');
+  await page.waitForTimeout(200);
+  const reveals = () => events.filter(e => e.counter === 'project_details_revealed' && e.project === 'local-events');
+  expect(reveals()).toHaveLength(0);
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect.poll(() => reveals().length).toBe(1);
+  await card.hover();
+  const box = await card.boundingBox();
+  if (!box) throw new Error('Missing project card');
+  await page.mouse.move(box.x+box.width/2, box.y+box.height/2);
+  await page.mouse.down();
+  await page.mouse.move(box.x+box.width/2+80, box.y+box.height/2,{steps:8});
+  await page.mouse.up();
+  await expect.poll(() => events.some(e => e.counter === 'carousel_dragged')).toBe(true);
+  await page.waitForTimeout(300);
+  expect(reveals()).toHaveLength(1);
+  expect(external).toEqual([]);
+});
