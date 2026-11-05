@@ -1,5 +1,5 @@
 # danimon-web
-Web estática de texto en inglés (/) y español (/es/). Incluye perfil, formación, proyectos, tecnologías y contacto profesional.
+Portfolio desarrollado con Astro y TypeScript, en inglés (/) y español (/es/). Incluye proyectos interactivos, tecnologías, perfil profesional y analítica opcional con consentimiento.
 
 Desde PowerShell:
 ~~~powershell
@@ -9,7 +9,7 @@ npm run dev
 ~~~
 Abrir la dirección Local indicada por Astro. Añadir /es/ para español. Ctrl+C detiene el servidor. En una instalación nueva, ejecutar npm ci antes del primer arranque.
 
-Para compilar: npm run build. La última versión del cartel con visera ASCII está en output/recovery/portfolio-visor-ascii-final.zip. Extraer en una carpeta vacía y ejecutar npm ci para recuperarla por separado.
+Para compilar: npm run build.
 
 ## Analítica opcional
 

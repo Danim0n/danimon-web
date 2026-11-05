@@ -7,6 +7,8 @@ playwright-report/
 .cache/
 output/
 .codex/
+.agents/
+tools/skills/
 .env
 .env.*
 !.env.example

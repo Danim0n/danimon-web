@@ -83,19 +83,15 @@ Una firma idéntica repetida en menos de 750 ms se descarta. Los controles se li
 
 La suite de privacidad debe interceptar toda red externa incluso al cargar el SDK real. Verifica ausencia de peticiones antes/rechazo, autorización por categoría, retirada y carreras, bloqueo, persistencia, idioma, eventos y duplicados, teclado y móvil. Un adaptador fake no demuestra recepción real. El informe final de QA enumera lo efectivamente ejecutado.
 
-## Fuentes y skills
-
-Se aplicó find-skills y se ejecutó su CLI tras auditar el paquete. Se compararon skills oficiales Cloudflare/PostHog, Astro, Playwright, analítica y privacidad. Ninguna añadía valor suficiente sin contradecir el consentimiento o ampliar el alcance, por lo que no se instalaron nuevas skills. Informe reproducible, comandos, licencias y fuentes en output/qa/analytics-research.md.
+## Fuentes oficiales
 
 - AEPD, [guía sobre cookies](https://www.aepd.es/guias/guia-cookies.pdf).
 - Cloudflare, [activación de Web Analytics](https://developers.cloudflare.com/web-analytics/get-started/) y [datos y métricas](https://developers.cloudflare.com/web-analytics/data-metrics/).
 - PostHog, [configuración JS](https://posthog.com/docs/libraries/js/config), [privacidad](https://posthog.com/docs/privacy) y [persistencia](https://posthog.com/docs/libraries/js/persistence).
 - Astro, [variables de entorno](https://docs.astro.build/en/guides/environment-variables/).
 
-El coordinador es el único editor de producción. El investigador y el revisor independiente trabajaron con los modelos realmente invocados y sin subdelegación. Las preferencias TOML no alteran esos procesos.
-
-## Agentes y modelos efectivos
-
-Coordinador gpt-6.1-sol, investigador analytics_research con gpt-6-luna (high), revisión independiente analytics_qa con gpt-6.1-terra (high). Se reutilizó direction exclusivamente para revisar las capturas del consentimiento, sin editar ni rediseñar el portfolio. Es una sesión anterior y no se atribuye un cambio de modelo por modificar un TOML. Los colaboradores no subdelegaron.
-
 Resultados consolidados y límites en [ANALYTICS_VALIDATION.md](ANALYTICS_VALIDATION.md). Contrato móvil en [ANALYTICS_MOBILE_API.md](ANALYTICS_MOBILE_API.md) y paneles/consultas en [ANALYTICS_DASHBOARDS.md](ANALYTICS_DASHBOARDS.md).
+
+## Proyecto PostHog
+
+El proyecto europeo indicado es 336435. La ingesta usa https://eu.i.posthog.com y el panel se consulta en https://eu.posthog.com/project/336435. El token público se configura mediante PUBLIC_POSTHOG_KEY en el entorno de compilación, fuera del repositorio. Este ID no otorga permisos de consulta.

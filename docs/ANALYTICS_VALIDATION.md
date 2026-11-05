@@ -13,9 +13,9 @@
 - Build normal en off, incluso tras aceptar, sin solicitud externa de analítica, sin identidad opcional y sin API de test en window.
 - Escaneo del build HTML/JS/CSS/JSON sin coincidencias con los patrones seleccionados de claves privadas. No se inspeccionaron archivos privados de entorno. Este análisis no garantiza la ausencia de cualquier formato de secreto.
 - npm audit de dependencias de producción sin vulnerabilidades notificadas al ejecutar la revisión.
-- Aviso y preferencias inspeccionados visualmente por el coordinador, QA y dirección artística. Mismo peso visual para aceptar y rechazar. En móvil el aviso ocupa parte del primer encuadre y cubre temporalmente la tarjeta de perfil; los controles permanecen utilizables.
+- Aviso y preferencias inspeccionados visualmente en escritorio y móvil. Mismo peso visual para aceptar y rechazar. En móvil el aviso ocupa parte del primer encuadre y cubre temporalmente la tarjeta de perfil; los controles permanecen utilizables.
 
-Resultados reproducibles en output/qa/analytics/results.json, audit.json, host-audit.json, npm-audit.json, final-build.log, regression.log y ejecucion.md. La investigación y búsqueda de skills se registran en output/qa/analytics-research.md.
+Resultados reproducibles en output/qa/analytics/results.json, audit.json, host-audit.json, npm-audit.json, final-build.log, regression.log y ejecucion.md.
 
 ## Rendimiento
 
