@@ -1,6 +1,5 @@
 {
   "name": "danimon-web",
-  "account_id": "3e073f5782437b8ece6c97aa173a4e1f",
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-08-06",
   "send_metrics": false,
