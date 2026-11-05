@@ -95,3 +95,7 @@ Resultados consolidados y límites en [ANALYTICS_VALIDATION.md](ANALYTICS_VALIDA
 ## Proyecto PostHog
 
 El proyecto europeo indicado es 336435. La ingesta usa https://eu.i.posthog.com y el panel se consulta en https://eu.posthog.com/project/336435. El token público se configura mediante PUBLIC_POSTHOG_KEY en el entorno de compilación, fuera del repositorio. Este ID no otorga permisos de consulta.
+
+## Comprobación específica de Cloudflare
+
+El modo manual y el token del sitio se comprobaron en el panel autenticado. La configuración local ya incluye el token público y la marca de auditoría. El script oficial se verificó con red interceptada en ambos idiomas. El estado del dominio público y los límites se detallan en [CLOUDFLARE_ANALYTICS.md](CLOUDFLARE_ANALYTICS.md).

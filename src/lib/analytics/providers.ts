@@ -86,6 +86,7 @@ export function safeCloudflareDocument(): boolean {
 export function cloudflareProvider(token: string): CloudflareHandle | null {
   if (hasCloudflareBeacon()) return null;
   const script = document.createElement('script');
+  script.type = 'module';
   script.src = 'https://static.cloudflareinsights.com/beacon.min.js';
   script.defer = true;
   script.dataset.cfBeacon = JSON.stringify({ token, spa: false });

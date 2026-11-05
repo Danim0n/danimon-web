@@ -1,0 +1,33 @@
+# Preserve HTML so the proxy does not automatically insert another beacon.
+/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/es/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/projects/local-events/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/es/proyectos/eventos/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/demo/facturas/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/es/demo/facturas/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/privacy/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/es/privacidad/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/cookies/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/es/cookies/
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
+/404.html
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
