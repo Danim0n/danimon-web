@@ -3,7 +3,11 @@
   "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-08-06",
   "send_metrics": false,
-  "vars": { "PUBLIC_ORIGIN": "https://danimon-web.pages.dev", "COUNTERS_ENABLED": "true" },
+  "vars": {
+    "PUBLIC_ORIGIN": "https://danimon-web.pages.dev", "COUNTERS_ENABLED": "true",
+    "PUBLIC_ANALYTICS_MODE": "production", "PUBLIC_COUNTERS_ORIGIN": "https://danimon-web.pages.dev",
+    "PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED": "false", "NODE_VERSION": "24"
+  },
   "d1_databases": [{
     "binding": "COUNTERS", "database_name": "danimon-counters",
     "database_id": "ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2",
