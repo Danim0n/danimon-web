@@ -6,7 +6,7 @@
   "vars": { "COUNTERS_ENABLED": "true" },
   "d1_databases": [{
     "binding": "COUNTERS", "database_name": "danimon-counters",
-    "database_id": "ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2", "jurisdiction": "eu"
+    "database_id": "ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2"
   }],
   "observability": { "enabled": false, "logs": { "enabled": false, "invocation_logs": false } },
   "triggers": { "crons": ["0 3 * * *"] }

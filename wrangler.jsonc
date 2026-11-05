@@ -8,6 +8,6 @@
   "d1_databases": [{
     "binding": "COUNTERS", "database_name": "danimon-counters",
     "database_id": "ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2",
-    "jurisdiction": "eu", "migrations_dir": "migrations"
+    "migrations_dir": "migrations"
   }]
 }
