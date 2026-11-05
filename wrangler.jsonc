@@ -1,5 +1,13 @@
 {
-  "name": "danimon-portfolio",
-  "compatibility_date": "2026-11-03",
-  "assets": { "directory": "./dist", "not_found_handling": "404-page" }
+  "name": "danimon-web",
+  "account_id": "3e073f5782437b8ece6c97aa173a4e1f",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-08-06",
+  "send_metrics": false,
+  "vars": { "PUBLIC_ORIGIN": "https://danimon-web.pages.dev", "COUNTERS_ENABLED": "true" },
+  "d1_databases": [{
+    "binding": "COUNTERS", "database_name": "danimon-counters",
+    "database_id": "ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2",
+    "jurisdiction": "eu", "migrations_dir": "migrations"
+  }]
 }

@@ -1,0 +1,6 @@
+{
+  "name": "danimon-web-bundle",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-06",
+  "send_metrics": false
+}

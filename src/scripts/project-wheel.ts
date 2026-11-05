@@ -36,7 +36,6 @@ function mountWheel(root: HTMLElement) {
   function faces() {
     items.forEach((item,i)=>{
       const open=i===(pinned>=0?pinned:hover);
-      if (open && !item.hasAttribute('data-open')) recordProjectDetails(i);
       item.toggleAttribute('data-open',open);
       item.querySelector('button')!.setAttribute('aria-expanded',String(open));
     });
@@ -51,7 +50,9 @@ function mountWheel(root: HTMLElement) {
     });
     button.addEventListener('click',e=>{
       if(skipClick && e.detail!==0)return;
-      pinned=pinned===i?-1:i;hover=-1;faces();
+      pinned=pinned===i?-1:i;hover=-1;
+      if (pinned >= 0) recordProjectDetails(i);
+      faces();
     });
   });
   function cardAt(target: EventTarget | null) {
@@ -83,6 +84,7 @@ function mountWheel(root: HTMLElement) {
       gesture.moved=true;
       stage.setPointerCapture(e.pointerId);
       pinned=gesture.card;
+      if (pinned >= 0) recordProjectDetails(pinned);
       hover=-1;
       faces();
     }

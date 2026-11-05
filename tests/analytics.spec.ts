@@ -1,347 +1,196 @@
 import {test, expect, type Page} from '@playwright/test';
-import {gunzipSync} from 'node:zlib';
+import {counters, pages, projects} from '../src/lib/analytics/catalog';
 
-const api = (page: Page, fn: string, args: unknown[] = []) => page.evaluate(({fn, args}) => {
-  const a = (window as any).__analyticsTest;
-  if (!a) throw new Error('Test-only analytics API is missing');
-  return typeof a[fn] === 'function' ? a[fn](...args) : a[fn];
-}, {fn, args});
-const state = (page: Page) => api(page, 'state');
-const events = (page: Page) => api(page, 'events');
+type Payload = {page:string; language:string; counter:string; project:string};
+async function watch(page: Page, fail = false) {
+  const events: Payload[] = [], external: string[] = [], headers: Record<string,string>[] = [];
+  await page.addInitScript(() => {
+    const original = window.fetch;
+    (window as any).__requestOptions = [];
+    window.fetch = function(input, init) {
+      if (typeof input === 'string' && input === '/api/interactions')
+        (window as any).__requestOptions.push({credentials:init?.credentials, keepalive:init?.keepalive, referrerPolicy:init?.referrerPolicy});
+      return original.call(this,input,init);
+    };
+    document.addEventListener('click', event => {
+      const a = (event.target as Element)?.closest?.('a[href]');
+      if (a && ((a as HTMLAnchorElement).origin !== location.origin || (a as HTMLAnchorElement).protocol === 'mailto:')) event.preventDefault();
+    }, true);
+  });
+  await page.route('**/*', async route => {
+    const request = route.request(), url = new URL(request.url());
+    if (url.origin !== 'http://127.0.0.1:4330') {external.push(url.hostname); return route.abort();}
+    if (url.pathname === '/api/interactions') {
+      expect(request.method()).toBe('POST');
+      headers.push(request.headers());
+      const body = JSON.parse(request.postData() || 'null');
+      expect(Array.isArray(body)).toBe(true);
+      expect(body.length).toBeGreaterThanOrEqual(1);
+      expect(body.length).toBeLessThanOrEqual(5);
+      for (const e of body) {
+        expect(Object.keys(e).sort()).toEqual(['counter','language','page','project']);
+        expect(counters).toContain(e.counter);
+        expect(pages).toContain(e.page);
+        expect(projects).toContain(e.project);
+        expect(['en','es']).toContain(e.language);
+        events.push(e);
+      }
+      return route.fulfill({status:fail ? 503 : 204, body:''});
+    }
+    return route.continue();
+  });
+  return {events, external, headers};
+}
 
-for (const [lang, path] of [['en', '/'], ['es', '/es/']] as const) {
-  test(`${lang}: reject, reload, configure and withdraw`, async ({page}) => {
-    const outgoing: string[] = [];
-    await page.route('**/*', async route => {
-      const url = new URL(route.request().url());
-      if (url.hostname !== '127.0.0.1' && url.hostname !== 'localhost') { outgoing.push(url.hostname); return route.abort(); }
-      return route.continue();
+for (const [lang,path] of [['en','/'],['es','/es/']] as const) {
+  test(`${lang} real POST body, no storage and CV click`, async ({page}) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('danimon.analytics.consent.v1','old');
+      sessionStorage.setItem('danimon.analytics.session.v1','old');
+      localStorage.setItem('other-app-key','preserve');
     });
-    await page.goto(path);
-    await expect(page.locator('[data-consent-banner]')).toBeVisible();
-    expect((await state(page)).loads).toBe(0);
-    expect(await events(page)).toEqual([]);
-    await page.locator('[data-consent-banner] [data-consent-reject]').click();
-    await page.reload();
-    await expect(page.locator('[data-consent-banner]')).toBeHidden();
-    expect((await state(page)).loads).toBe(0);
-    await page.locator('.privacy-access [data-privacy-open]').click();
-    const dialog = page.locator('[data-privacy-dialog]');
-    await expect(dialog).toBeVisible();
-    await expect(dialog.locator('[name=web]')).not.toBeChecked();
-    await expect(dialog.locator('[name=interactions]')).not.toBeChecked();
-    await dialog.locator('[name=interactions]').check();
-    await dialog.locator('[type=submit]').click();
-    await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-    expect((await state(page)).cloudflareLoads).toBe(0);
-    expect((await events(page)).filter((e: any) => e.name === 'page_viewed')).toHaveLength(1);
-    await page.locator('.privacy-access [data-privacy-open]').click();
-    await dialog.locator('[data-consent-withdraw]').click();
-    expect((await state(page)).providerReady).toBe(false);
-    await api(page, 'track', ['cv_download_clicked', {source:'profile'}]);
-    expect((await events(page)).filter((e: any) => e.name === 'cv_download_clicked')).toHaveLength(0);
-    await page.reload();
-    expect((await state(page)).loads).toBe(0);
-    expect(outgoing).toEqual([]);
+    const {events,external,headers} = await watch(page);
+    await page.goto(`${path}?private=sample#fragment`);
+    await expect.poll(() => events.some(e => e.counter === 'section_main_viewed')).toBe(true);
+    await page.locator('.profile-dock summary').focus();
+    await page.keyboard.press('Enter');
+    expect(events.filter(e => e.counter === 'cv_download_clicked')).toHaveLength(0);
+    const [download] = await Promise.all([page.waitForEvent('download'),page.locator('.cv-download').click()]);
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
+    await expect.poll(() => events.filter(e => e.counter === 'cv_download_clicked').length).toBe(1);
+    expect(events.every(e => e.language === lang && e.page === 'home')).toBe(true);
+    expect(JSON.stringify(events)).not.toContain('sample');
+    expect(JSON.stringify(events)).not.toContain('fragment');
+    expect(headers.every(h => !h.referer && !h.cookie)).toBe(true);
+    const options = await page.evaluate(() => (window as any).__requestOptions);
+    expect(options.length).toBeGreaterThan(0);
+    expect(options.every((o:any) => o.credentials === 'omit' && o.keepalive === true && o.referrerPolicy === 'no-referrer')).toBe(true);
+    expect(await page.evaluate(() => ({local:Object.keys(localStorage), session:Object.keys(sessionStorage), value:localStorage.getItem('other-app-key')}))).toEqual({local:['other-app-key'],session:[],value:'preserve'});
+    expect(await page.context().cookies()).toEqual([]);
+    expect(external).toEqual([]);
+    await expect(page.locator('[data-consent-banner], [data-privacy-dialog]')).toHaveCount(0);
   });
 }
 
-test('withdrawal during asynchronous loading closes the gate', async ({page}) => {
-  await page.goto('/');
-  await api(page, 'setDelay', [800]);
-  await api(page, 'save', [false, true]);
-  await api(page, 'track', ['cv_download_clicked', {source:'profile'}]);
-  await api(page, 'withdraw');
-  await page.waitForTimeout(1100);
-  expect((await state(page)).providerReady).toBe(false);
-  expect(await events(page)).toEqual([]);
-});
+for (const signal of ['gpc','dnt'] as const) {
+  test(`${signal} blocks counters and third party requests`, async ({page}) => {
+    await page.addInitScript(signal => {
+      if (signal === 'gpc') Object.defineProperty(navigator,'globalPrivacyControl',{get:()=>true});
+      else Object.defineProperty(navigator,'doNotTrack',{get:()=> '1'});
+    }, signal);
+    const {events,external} = await watch(page);
+    await page.goto('/');
+    await page.locator('.portfolio-appbar a[href="#projects"]').click();
+    await page.waitForTimeout(300);
+    expect(events).toEqual([]);
+    expect(external).toEqual([]);
+  });
+}
 
-test('withdrawal propagates between tabs and cancels a pending load', async ({context, page}) => {
-  await page.goto('/');
-  const second = await context.newPage();
-  await second.goto('/');
-  await api(second, 'setDelay', [1000]);
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(second)).status).toBe('loading');
-  await api(page, 'withdraw');
-  await expect.poll(async () => (await state(second)).consent?.interactions).toBe(false);
-  await page.waitForTimeout(1200);
-  expect((await state(second)).providerReady).toBe(false);
-  expect(await events(second)).toEqual([]);
-});
-
-test('rejects free-form event names, properties and values', async ({page}) => {
-  await page.goto('/?private=sample#fragment');
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await api(page, 'clear');
-  await api(page, 'track', ['cv_download_clicked', {source:'profile', url:'https://example.com/private'}]);
-  await api(page, 'track', ['cv_download_clicked', {source:'sensitive input'}]);
-  await api(page, 'track', ['arbitrary', {value:'sensitive input'}]);
-  expect((await events(page)).filter((e: any) => e.name === 'cv_download_clicked' || e.name === 'arbitrary')).toEqual([]);
-  await api(page, 'track', ['cv_download_clicked', {source:'profile'}]);
-  const captured = (await events(page)).filter((e: any) => e.name === 'cv_download_clicked');
-  expect(captured).toHaveLength(1);
-  expect(captured[0].name).toBe('cv_download_clicked');
-  expect(JSON.stringify(captured)).not.toContain('private');
-  expect(JSON.stringify(captured)).not.toContain('fragment');
-});
-
-test('keyboard opens preferences and Escape closes it', async ({page}) => {
-  await page.goto('/es/');
-  const button = page.locator('[data-consent-banner] [data-privacy-open]');
-  await button.focus();
-  await page.keyboard.press('Enter');
-  const dialog = page.locator('[data-privacy-dialog]');
-  await expect(dialog).toBeVisible();
-  await expect(dialog).toHaveAccessibleName('Tus preferencias');
-  await page.keyboard.press('Escape');
-  await expect(dialog).toBeHidden();
-  await expect(button).toBeFocused();
-});
-
-test('CV is counted only on activation and scroll milestones are deduplicated', async ({page}) => {
-  await page.goto('/');
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await api(page, 'clear');
-  await page.locator('.profile-dock summary').click();
-  expect((await events(page)).filter((e: any) => e.name === 'cv_download_clicked')).toHaveLength(0);
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('.profile-dock a[download]').click(),
-  ]);
-  expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-  expect((await events(page)).filter((e: any) => e.name === 'cv_download_clicked')).toHaveLength(1);
-  const scroller = page.locator('.portfolio-scrollport');
-  await scroller.evaluate(el => { el.scrollTop = el.scrollHeight; });
-  await expect.poll(async () => (await events(page)).filter((e: any) => e.name === 'scroll_depth_reached').length).toBe(4);
-  await scroller.evaluate(el => { el.scrollTop = 0; });
-  await scroller.evaluate(el => { el.scrollTop = el.scrollHeight; });
-  await page.waitForTimeout(200);
-  expect((await events(page)).filter((e: any) => e.name === 'scroll_depth_reached').map((e: any) => e.properties.percent).sort((a: number,b: number)=>a-b)).toEqual([25,50,75,100]);
-});
-
-test('automatic carousel motion emits no interaction', async ({page}) => {
+test('scroll milestones deduplicate and autonomous carousel does not count', async ({page}) => {
+  const {events,external} = await watch(page);
   await page.goto('/#projects');
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await api(page, 'clear');
   await page.waitForTimeout(1200);
-  expect((await events(page)).filter((e: any) => e.name.startsWith('interactive_') || e.name.startsWith('3d_'))).toEqual([]);
+  expect(events.filter(e => e.counter === 'carousel_dragged' || e.counter === 'project_details_revealed')).toEqual([]);
   await page.locator('.wheel-item button.card-hit').first().focus();
   await page.keyboard.press('Enter');
-  await expect.poll(async () => (await events(page)).some((e: any) => e.name === 'interactive_control_used' && e.properties.control === 'flip')).toBe(true);
+  await expect.poll(() => events.some(e => e.counter === 'project_details_revealed' && e.project === 'local-events')).toBe(true);
+  const scroller = page.locator('.portfolio-scrollport');
+  await scroller.evaluate(el => {el.scrollTop = el.scrollHeight;});
+  await expect.poll(() => events.filter(e => e.counter.startsWith('scroll_')).length).toBe(4);
+  await scroller.evaluate(el => {el.scrollTop = 0;});
+  await scroller.evaluate(el => {el.scrollTop = el.scrollHeight;});
+  await page.waitForTimeout(250);
+  expect(events.filter(e => e.counter.startsWith('scroll_')).map(e => e.counter).sort()).toEqual(['scroll_100_reached','scroll_25_reached','scroll_50_reached','scroll_75_reached']);
+  expect(external).toEqual([]);
 });
 
-test('real SDK sends only after consent and stops after withdrawal, with network intercepted', async ({page}) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'userAgent', {get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'});
-    Object.defineProperty(navigator, 'webdriver', {get: () => false});
-    Object.defineProperty(navigator, 'userAgentData', {get: () => ({brands: [{brand:'Chromium', version:'131'}], mobile:false, platform:'Windows'})});
-  });
-  const requests: {url:string, body:string}[] = [];
-  await page.route('**/*', async route => {
-    const request = route.request(), url = new URL(request.url());
-    if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') return route.continue();
-    const raw = request.postDataBuffer() ?? Buffer.alloc(0);
-    const body = raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw).toString('utf8') : raw.toString('utf8');
-    requests.push({url: request.url(), body});
-    return route.fulfill({status:200, contentType:'application/json', body:'{"status":1}'});
-  });
-  await page.goto('/?private=secret-sample#fragment');
-  await api(page, 'useRealSdk');
-  expect(requests).toEqual([]);
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await api(page, 'track', ['cv_download_clicked', {source:'profile'}]);
-  await expect.poll(() => requests.length).toBeGreaterThan(0);
-  expect(requests.every(r => new URL(r.url).hostname === 'eu.i.posthog.com')).toBe(true);
-  expect(JSON.stringify(requests)).not.toContain('secret-sample');
-  expect(JSON.stringify(requests)).not.toContain('fragment');
-  await expect.poll(() => requests.some(r => r.body.includes('cv_download_clicked'))).toBe(true);
-  for (const request of requests) {
-    const payload = JSON.parse(request.body);
-    expect(payload.api_key).toBe('phc_LOCAL_TEST_ONLY_NOT_A_REAL_PROJECT');
-    for (const event of payload.batch) {
-      const p = event.properties;
-      expect(p.token).toBe('phc_LOCAL_TEST_ONLY_NOT_A_REAL_PROJECT');
-      expect(p.distinct_id).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
-      expect(p.$session_id).toBe(p.distinct_id);
-      expect(p.$process_person_profile).toBe(false);
-      expect(p.$geoip_disable).toBe(true);
-      expect(p.$ip).toBeNull();
-      expect(p.schema_version).toBe(1);
-      expect(p.page_id).toBe('home');
-      expect(p.language).toBe('en');
-      expect(p.device_type).toBe('desktop');
-      expect(p.traffic_source).toBe('direct');
-      const extra = event.event === 'section_viewed' ? ['section_id'] : event.event === 'cv_download_clicked' ? ['source'] : [];
-      expect(Object.keys(p).sort()).toEqual(['schema_version','page_id','language','device_type','traffic_source','token','distinct_id','$session_id','$process_person_profile','$geoip_disable','$ip',...extra].sort());
-    }
-  }
-  await api(page, 'withdraw');
-  await page.waitForTimeout(500);
-  const count = requests.length;
-  await api(page, 'track', ['linkedin_clicked', {source:'profile'}]);
-  await page.waitForTimeout(500);
-  expect(requests).toHaveLength(count);
-  expect(await page.evaluate(() => sessionStorage.getItem('danimon.analytics.session.v1'))).toBeNull();
-  expect(await page.evaluate(() => Object.keys(localStorage).filter(k => /posthog|ph_/i.test(k)))).toEqual([]);
-});
-
-for (const [lang, path, width] of [['en','/',1440],['es','/es/',390]] as const) {
-  test(`consent visual evidence ${lang} ${width}`, async ({page}) => {
-    await page.setViewportSize({width, height: width === 390 ? 844 : 900});
-    await page.goto(path);
-    await expect(page.locator('[data-consent-banner]')).toBeVisible();
-    await page.screenshot({path:`output/qa/analytics/consent-${lang}-${width}.png`});
-    await page.locator('[data-consent-banner] [data-privacy-open]').click();
-    await expect(page.locator('[data-privacy-dialog]')).toBeVisible();
-    await page.screenshot({path:`output/qa/analytics/preferences-${lang}-${width}.png`});
-  });
-}
-
-
-
-
-test('privacy signal prevents optional providers despite acceptance', async ({page}) => {
-  await page.addInitScript(() => Object.defineProperty(navigator, 'globalPrivacyControl', {get: () => true}));
+test('counter endpoint failure never blocks navigation', async ({page}) => {
+  const {events, external} = await watch(page, true);
   await page.goto('/');
-  await api(page, 'save', [true, true]);
-  await page.waitForTimeout(300);
-  const status = await state(page);
-  expect(status.signal).toBe(true);
-  expect(status.providerReady).toBe(false);
-  expect(status.loads).toBe(0);
-  expect(status.cloudflareLoads).toBe(0);
-  await page.locator('.privacy-access [data-privacy-open]').click();
-  await expect(page.locator('[data-privacy-signal]')).toBeVisible();
-  await expect(page.locator('[name=interactions]')).toBeDisabled();
-});
-
-test('provider failure does not break navigation or leak events', async ({page}) => {
-  await page.goto('/');
-  await api(page, 'setFailure', [true]);
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).status).toBe('blocked');
-  expect((await state(page)).providerReady).toBe(false);
-  await api(page, 'track', ['cv_download_clicked', {source:'profile'}]);
-  expect(await events(page)).toEqual([]);
+  await page.locator('.portfolio-appbar a[href="#projects"]').click();
+  await expect.poll(() => events.some(e => e.counter === 'navigation_projects_clicked')).toBe(true);
+  await expect(page.locator('#projects')).toBeVisible();
+  await page.goto('/es/proyectos/eventos/');
   await expect(page.locator('h1')).toBeVisible();
-  await page.locator('.privacy-access [data-privacy-open]').click();
-  await expect(page.locator('[data-privacy-dialog]')).toBeVisible();
+  await expect.poll(() => events.some(e => e.counter === 'project_detail_viewed' && e.page === 'local-events' && e.project === 'local-events')).toBe(true);
+  expect(external).toEqual([]);
 });
 
-test('a stale load cannot replace a later re-acceptance', async ({page}) => {
+test('contact actions emit only fixed counters and never addresses', async ({page}) => {
+  const {events,external} = await watch(page);
   await page.goto('/');
-  await api(page, 'setDelay', [800]);
-  await api(page, 'save', [false, true]);
-  await api(page, 'withdraw');
-  await api(page, 'setDelay', [0]);
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await page.waitForTimeout(1000);
-  expect((await state(page)).providerReady).toBe(true);
-  expect((await events(page)).filter((e: any) => e.name === 'page_viewed')).toHaveLength(1);
+  await page.locator('.profile-dock summary').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('.profile-dock .email').click();
+  await expect.poll(() => events.some(e => e.counter === 'contact_chooser_opened')).toBe(true);
+  const links = page.locator('.mail-options a');
+  for (const [index, name] of [[0,'email_gmail_clicked'],[1,'email_outlook_clicked'],[2,'email_app_clicked']] as const) {
+    await links.nth(index).click();
+    await expect.poll(() => events.some(e => e.counter === name)).toBe(true);
+  }
+  await page.locator('.mail-options button[data-copy]').click();
+  await expect.poll(() => events.some(e => ['email_copy_succeeded','email_copy_selected'].includes(e.counter))).toBe(true);
+  expect(JSON.stringify(events)).not.toContain('@');
+  expect(external).toEqual([]);
 });
 
-
-
-
-for (const [lang, path] of [['en','/'], ['es','/es/']] as const) {
-  test(`${lang} mobile consent accessibility with keyboard`, async ({page}) => {
-    await page.setViewportSize({width:390, height:844});
-    await page.goto(path);
-    const banner = page.locator('[data-consent-banner]');
-    await expect(banner).toBeVisible();
-    const {default:AxeBuilder} = await import('@axe-core/playwright');
-    expect((await new AxeBuilder({page}).include('[data-consent-banner]').analyze()).violations).toEqual([]);
-    const open = banner.locator('[data-privacy-open]');
-    await open.focus();
-    await page.keyboard.press('Enter');
-    const dialog = page.locator('[data-privacy-dialog]');
-    await expect(dialog).toBeVisible();
-    expect((await new AxeBuilder({page}).include('[data-privacy-dialog]').analyze()).violations).toEqual([]);
-    await page.keyboard.press('Tab');
-    expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
-    await page.keyboard.press('Escape');
-    await expect(open).toBeFocused();
-  });
-}
-
-test('Cloudflare fake detects existing beacon and requires reload after withdrawal', async ({page}) => {
-  await page.goto('/');
-  await page.evaluate(() => {
-    const script = document.createElement('script');
-    script.dataset.cfBeacon = '{}';
-    document.head.appendChild(script);
-  });
-  await api(page, 'save', [true, false]);
-  expect((await state(page)).cloudflareDuplicate).toBe(true);
-  expect((await state(page)).cloudflareLoads).toBe(0);
-  await api(page, 'withdraw');
-  await page.reload();
-  await page.evaluate(() => document.querySelector('script[data-cf-beacon]')?.remove());
-  await api(page, 'save', [true, false]);
-  expect((await state(page)).cloudflareLoads).toBe(1);
-  await api(page, 'withdraw');
-  expect((await state(page)).reloadRequired).toBe(true);
+test('language and project navigation use fixed context', async ({page}) => {
+  const {events,external} = await watch(page);
+  await page.goto('/es/');
+  await page.locator('.case-shortcut a').click();
+  await expect(page).toHaveURL(/\/es\/proyectos\/eventos\/$/);
+  await expect.poll(() => events.some(e => e.counter === 'project_opened' && e.project === 'local-events' && e.language === 'es')).toBe(true);
+  await expect.poll(() => events.some(e => e.counter === 'project_detail_viewed' && e.page === 'local-events')).toBe(true);
+  await page.goto('/es/');
+  await page.locator('.language-bar a[lang="en"]').click();
+  await expect.poll(() => events.some(e => e.counter === 'language_en_selected' && e.language === 'es')).toBe(true);
+  expect(external).toEqual([]);
 });
 
-test('active time milestone fires once only with consent and activity', async ({page}) => {
+test('project details and drag are counted by fixed project without motion telemetry', async ({page}) => {
+  const {events, external} = await watch(page);
+  await page.goto('/#projects');
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.clock.install();
-  await page.goto('/');
-  expect((await state(page)).loads).toBe(0);
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await page.clock.runFor(31000);
-  await expect.poll(async () => (await events(page)).filter((e: any) => e.name === 'active_time_milestone' && e.properties.seconds === 30).length).toBe(1);
-  await page.clock.runFor(1000);
-  expect((await events(page)).filter((e: any) => e.name === 'active_time_milestone' && e.properties.seconds === 30)).toHaveLength(1);
+  const buttons = page.locator('.wheel-item button.card-hit');
+  for (let i=0; i<4; i++) {
+    await buttons.nth(i).focus();
+    await page.keyboard.press('Enter');
+  }
+  await expect.poll(() => events.filter(e => e.counter === 'project_details_revealed').length).toBe(4);
+  expect(events.filter(e => e.counter === 'project_details_revealed').map(e => e.project).sort()).toEqual(['automation-backend','invoice-reader','local-events','portfolio']);
+  const stage = page.locator('.wheel-stage'), rect = await stage.boundingBox();
+  if (!rect) throw new Error('Missing carousel stage');
+  await page.mouse.move(rect.x+15, rect.y+15);
+  await page.mouse.down();
+  await page.mouse.move(rect.x+180, rect.y+15,{steps:8});
+  await page.mouse.up();
+  await expect.poll(() => events.some(e => e.counter === 'carousel_dragged' && e.project === 'none')).toBe(true);
+  expect(external).toEqual([]);
+});
+
+test('detail page scrolls naturally and emits each milestone once', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  const {events} = await watch(page);
+  await page.goto('/projects/local-events/');
+  const scroller = page.locator('.portfolio-scrollport');
+  await scroller.evaluate(el => {el.scrollTop = el.scrollHeight;});
+  await expect.poll(() => events.filter(e => e.counter.startsWith('scroll_')).length).toBe(4);
+  await scroller.evaluate(el => {el.scrollTop = 0;});
+  await scroller.evaluate(el => {el.scrollTop = el.scrollHeight;});
+  await page.waitForTimeout(250);
+  expect(events.filter(e => e.counter.startsWith('scroll_')).map(e => e.counter).sort()).toEqual(['scroll_100_reached','scroll_25_reached','scroll_50_reached','scroll_75_reached']);
 });
 
 
-
-test('real SDK works with sessionStorage denied using a stable in-memory session', async ({page}) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'userAgent', {get: () => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'});
-    Object.defineProperty(navigator, 'webdriver', {get: () => false});
-    Object.defineProperty(navigator, 'userAgentData', {get: () => ({brands:[{brand:'Chromium',version:'131'}],mobile:false,platform:'Windows'})});
-    const get = Storage.prototype.getItem, set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
-    Storage.prototype.getItem = function(key) { if (this === sessionStorage) throw new DOMException('Denied', 'SecurityError'); return get.call(this, key); };
-    Storage.prototype.setItem = function(key, value) { if (this === sessionStorage) throw new DOMException('Denied', 'SecurityError'); return set.call(this, key, value); };
-    Storage.prototype.removeItem = function(key) { if (this === sessionStorage) throw new DOMException('Denied', 'SecurityError'); return remove.call(this, key); };
-  });
-  const payloads: any[] = [];
-  await page.route('**/*', async route => {
-    const request = route.request(), url = new URL(request.url());
-    if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') return route.continue();
-    const raw = request.postDataBuffer() ?? Buffer.alloc(0);
-    const body = raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw).toString('utf8') : raw.toString('utf8');
-    payloads.push({host:url.hostname, body:JSON.parse(body)});
-    return route.fulfill({status:200, contentType:'application/json', body:'{"status":1}'});
-  });
-  await page.goto('/');
-  await api(page, 'useRealSdk');
-  expect(payloads).toEqual([]);
-  await api(page, 'save', [false, true]);
-  await expect.poll(async () => (await state(page)).providerReady).toBe(true);
-  await api(page, 'track', ['cv_download_clicked', {source:'profile'}]);
-  await expect.poll(() => payloads.flatMap(p => p.body.batch).some((e:any) => e.event === 'cv_download_clicked')).toBe(true);
-  const sent = payloads.flatMap(p => p.body.batch);
-  expect(sent.some((e:any) => e.event === 'page_viewed')).toBe(true);
-  expect(payloads.every(p => p.host === 'eu.i.posthog.com')).toBe(true);
-  const ids = new Set(sent.map((e:any) => e.properties.$session_id));
-  expect(ids.size).toBe(1);
-  expect([...ids][0]).toMatch(/^[a-f0-9]{8}-[a-f0-9]{4}-7[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
-  await api(page, 'withdraw');
+test('hover reveals a project without emitting a details counter', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const {events,external} = await watch(page);
+  await page.goto('/#projects');
+  const card = page.locator('.wheel-item').first();
+  await card.hover();
+  await expect(card).toHaveAttribute('data-open','');
   await page.waitForTimeout(300);
-  const count = payloads.length;
-  await api(page, 'track', ['linkedin_clicked', {source:'profile'}]);
-  await page.waitForTimeout(300);
-  expect(payloads).toHaveLength(count);
-  expect(await page.evaluate(() => Object.keys(localStorage).filter(k => /posthog|ph_/i.test(k)))).toEqual([]);
+  expect(events.filter(e => e.counter === 'project_details_revealed')).toEqual([]);
+  expect(external).toEqual([]);
 });

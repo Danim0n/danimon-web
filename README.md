@@ -40,7 +40,7 @@ npm run build
 npm run preview -- --port 4325 --ignore-lock
 ~~~
 
-Los archivos compilados se generan en `dist/`. El proyecto incluye configuración para servirlos mediante Cloudflare Workers Static Assets.
+Los archivos compilados se generan en `dist/`. El proyecto incluye configuración para publicarlos en Cloudflare Pages desde GitHub.
 
 ## Organización
 

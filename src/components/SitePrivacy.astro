@@ -1,0 +1,15 @@
+---
+const { lang = 'en' } = Astro.props as { lang?: 'en' | 'es' };
+---
+<footer class="privacy-access"><a href={lang === 'es' ? '/es/privacidad/' : '/privacy/'}>{lang === 'es' ? 'Privacidad' : 'Privacy'}</a></footer>
+<script>
+  import { initializeAnalytics } from '../lib/analytics';
+  import { startInstrumentation } from '../lib/analytics/instrument';
+  initializeAnalytics();
+  startInstrumentation();
+</script>
+<style>
+  .privacy-access { position: fixed; bottom: .65rem; left: max(.7rem, env(safe-area-inset-left)); z-index: 19; }
+  a { display: inline-block; font: 500 .75rem "Space Grotesk",sans-serif; color: #e1f7ee; border: 1px solid #6b9c91; background: #0d2428; padding: .45rem .65rem; border-radius: 2rem; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>

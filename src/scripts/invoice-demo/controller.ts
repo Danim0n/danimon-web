@@ -1,5 +1,4 @@
 import { recordInteraction } from '../../lib/analytics/instrument';
-import { trackOnce } from '../../lib/analytics';
 import {invoiceCopy, type InvoiceLanguage} from './copy';
 import type {ExtractedInvoice, InvoiceField, Evidence} from './extract';
 
@@ -193,7 +192,6 @@ function initialise(root:HTMLElement) {
       clear.hidden = false;
       announce(t.saved);
       recordInteraction('invoice-reader','save');
-      trackOnce('interactive_experience_completed', { experience: 'invoice-reader', outcome: 'review-saved' });
     } catch {announce(t.saveError,true);}
   },eventOptions);
   download.addEventListener('click',()=>{

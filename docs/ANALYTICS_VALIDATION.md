@@ -1,38 +1,38 @@
-# Validación de telemetría
+# Validación de estadísticas
 
-5 de noviembre de 2026. Pruebas locales en Windows y Chromium mediante Playwright, con emulación de móvil. No se verificó hardware móvil real ni cuentas externas.
+5 de noviembre de 2026. Implementación local en Windows y Chromium. No hay recepción de datos ni despliegue remoto verificados.
 
-## Resultados
+## Resultados reproducibles
 
-- Astro check sin errores, avisos ni sugerencias. Build de once páginas completado.
-- Batería de privacidad y eventos con 19 pruebas correctas. Rechazo, aceptación granular, persistencia, retirada, carreras de carga, propagación entre pestañas, GPC, proveedor bloqueado, eventos inválidos, CV, scroll, carrusel, tiempo activo y teclado.
-- SDK real de PostHog, con navegador humano emulado únicamente en la prueba, red interceptada y cuerpo descomprimido. Sobre validado, UUIDv7, token público de fixture, opciones de privacidad y retirada correctos. También se probó sessionStorage denegado con sesión estable en memoria.
-- Axe sobre aviso y diálogo abiertos en EN/ES móvil, sin infracciones detectadas. Esto no equivale a una certificación exhaustiva de accesibilidad.
-- Diez pruebas de regresión del portfolio correctas sobre el preview normal.
-- Cuatro orígenes sintéticos con build production. Solo HTTPS y hostname exacto danimon.party habilitan la integración. Se interceptaron las solicitudes EU utilizando un marcador de proyecto inválido. La retirada recargó y dejó la sesión vacía. Ninguna solicitud llegó a un proveedor.
-- Build normal en off, incluso tras aceptar, sin solicitud externa de analítica, sin identidad opcional y sin API de test en window.
-- Escaneo del build HTML/JS/CSS/JSON sin coincidencias con los patrones seleccionados de claves privadas. No se inspeccionaron archivos privados de entorno. Este análisis no garantiza la ausencia de cualquier formato de secreto.
-- npm audit de dependencias de producción sin vulnerabilidades notificadas al ejecutar la revisión.
-- Aviso y preferencias inspeccionados visualmente en escritorio y móvil. Mismo peso visual para aceptar y rechazar. En móvil el aviso ocupa parte del primer encuadre y cubre temporalmente la tarjeta de perfil; los controles permanecen utilizables.
+| Comprobación | Resultado |
+| --- | --- |
+| npm run build | Once páginas; Astro check sin errores, avisos ni sugerencias |
+| npm test, preview 4325 del dist actual | 10/10, idiomas, móvil, axe, contacto, CV, carrusel y demo |
+| npm run test:analytics | 11/11, acciones con cuatro campos fijos; endpoint interceptado |
+| npm run test:counters | 11/11, Worker compilado y D1 local con workerd/SQLite |
+| npm run test:native | 8/8, origen HTTPS simulado y script oficial, red de medición interceptada |
+| node tools/check-counter-e2e.mjs | Frontend → Worker → D1 local, sin interceptar el endpoint |
 
-Resultados reproducibles en output/qa/analytics/results.json, audit.json, host-audit.json, npm-audit.json, final-build.log, regression.log y ejecucion.md.
+Frontend: DNT/GPC, ausencia de cookies/IDs persistentes, limpieza selectiva de claves antiguas, cada contacto, idiomas, cuatro proyectos, drag, scroll real y errores de endpoint sin bloquear navegación. El hover y la rotación automática no suman aperturas deliberadas. El guardado funcional de la demo conserva su almacenamiento propio.
 
-## Rendimiento
+Servidor: esquema de seis columnas, 100 incrementos concurrentes sin pérdidas, separación de categorías, campos desconocidos rechazados, origen y método, límite de cuerpo, DNT/GPC, PDF 200 frente a HEAD/206, ausencia de API de consulta pública, fallo o ausencia de D1 sin romper assets y retención. Las siete consultas de informes se ejecutaron con datos sintéticos. El cron se invoca directamente: no acredita su planificación en Cloudflare.
 
-Medición de una carga local fría de la portada ES, Chromium 1280×900, sin limitación de CPU/red:
+Integración completa local: clic y respuesta de CV, cuatro proyectos, ficha, demo, idioma, Gmail, Outlook, aplicación de correo y copia seleccionada producen filas agregadas en D1. Sin peticiones externas ni errores JS. No es una prueba de la base alojada.
 
-- Los módulos de la capa de analítica solicitados suman aproximadamente 6,4 kB gzip.
-- El JavaScript solicitado más módulos inline de esa carga suma aproximadamente 11,8 kB gzip, incluyendo código del portfolio existente.
-- El chunk diferido del SDK PostHog mide aproximadamente 388 kB sin comprimir y 120 kB gzip. No se solicitó en la carga sin permiso.
-- No hay medición por frame, ni coordenadas de ratón, ni observación del texto de formularios. Scroll se agrupa por frame y solo envía hitos únicos; el temporizador de atención comprueba una vez por segundo.
+Beacon: la puerta jurídica desactivada produce cero cargas; habilitada solo para prueba carga una instancia del script oficial y genera RUM interceptado. DNT, GPC, query, fragmento, referente inseguro y script preexistente impiden la carga manual. Se observaron almacenamiento vacío y ninguna cookie. Esto no comprueba recepción ni datos de un panel remoto.
 
-Son estimaciones gzip calculadas sobre archivos locales. No representan la compresión negociada en Cloudflare ni una comparación antes/después de Lighthouse o Core Web Vitals en producción. El beacon CF permanece sin cargar en el build normal.
+## Revisión visual y rendimiento
 
-## Límites pendientes
+Capturas de 1440×900 y 390×844 realmente abiertas y comparadas. Fondo WebGL activo, sin errores JavaScript/consola ni desbordamiento horizontal en las condiciones probadas. Dos fotogramas separados por un segundo muestran cambios de shader y giro de tarjetas. Se corrigió la superposición nueva de Privacidad sobre LinkedIn: la tarjeta de perfil queda delante al abrirse. El dock flotante sigue cubriendo parte del contenido mientras está abierto; no se ha rediseñado su comportamiento.
 
-- Cloudflare real: acceso al sitio, token público, estado de auto-inyección de zona/Pages, beacon real, retención, campos de API y disponibilidad de datasets.
-- PostHog real: proyecto EU, token público, contratos y retención de cuenta, paneles, cuotas y recepción efectiva de eventos.
-- Revisión aplicable de privacidad, encargados y transferencias con las cuentas elegidas. La opción restrictiva se mantiene activa hasta completar esa revisión.
-- Publicación futura y prueba de la red y los paneles sobre el dominio. No se publicó ni se modificaron DNS, servicios o el proyecto de administración.
+La primera suite completa obtuvo 9/10 por una espera de reanudación del carrusel; el caso aislado pasó y la repetición completa final obtuvo 10/10. No se afirma que ese resultado elimine toda intermitencia futura.
 
-La prueba de Cloudflare usa un simulador para consentimiento y duplicados. No puede certificar que un beacon inyectado por una zona externa respete este gestor. La comprobación de auto-inyección es un prerrequisito para activar PUBLIC_CLOUDFLARE_MANUAL_AUDITED.
+Carga local fría ES, Chromium 390×844, sin limitación de CPU/red: seis módulos JavaScript solicitados, 20.804 bytes sin comprimir y suma gzip estimada 8.774 bytes. Capa de estadísticas: aproximadamente 4,2 kB gzip dentro de ese total. Ninguna solicitud externa en esa carga y sin errores observados. Son tamaños de archivos locales, no bytes negociados en Cloudflare, Core Web Vitals de usuarios ni comparación controlada de Lighthouse. El SDK anterior ya no forma parte de dependencias o bundle.
+
+## Evidencias y límites
+
+Evidencias locales bajo output/qa/cloudflare-only: build-final.log, counters-final.log, native-beacon.json, native-beacon-final.log, e2e-worker-d1.json, visual-check-final.json, final-network.json y capturas final-es-*.png. La suite Playwright también conserva su JSON estándar en output/qa/analytics y output/qa/text. Los archivos output son locales e ignorados por Git.
+
+Tras autorización expresa se creó D1 danimon-counters en jurisdicción UE y se aplicó el esquema; las seis columnas se inspeccionaron en la consola real (d1-created.png). Pendientes: publicación del Worker con acceso limitado, recepción de acciones reales en D1, cron, red, cuotas y dominio. DNS intacto. La carga estática directa fue rechazada por aprobación automática porque no incorporaba el backend configurado; no produjo un despliegue. El token amplio del formulario GitHub sigue sin aprobarse.
+
+Revisión contractual del beacon y del tratamiento operativo del proveedor pendiente; PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED permanece false. No se certifica cumplimiento jurídico ni rendimiento sobre hardware móvil real.
