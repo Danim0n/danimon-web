@@ -114,7 +114,7 @@ No se activaron HSTS includeSubDomains/preload, COEP/COOP ni Trusted Types como 
 
 Coste adicional previsto: **0 €**, sin recursos contratados ni nuevas dependencias. El bundle Worker medido con el mismo esbuild pasó de 7.130 a 10.985 bytes (gzip 2.512 → 3.655); la línea CSP ocupa 729 bytes. Las protecciones no añaden JavaScript de seguridad al navegador ni solicitudes externas, lecturas D1 o escrituras auxiliares. No se ha medido latencia real del edge, Lighthouse nuevo ni consumo en dispositivos físicos: no se promete una mejora de rendimiento no medida.
 
-El refuerzo publicado está en el merge `3637e7ac8a9bd44ed2d4b4733cb3cdb35adf6e0a`; la corrección de reglas y el checker están en `7a6000ec32997c6ee4367cfb1d9e78ac7da9072c`. El estado de edge aún se debe cerrar con la comprobación posterior al despliegue. Procedimiento reproducible en [SECURITY_HARDENING.md](SECURITY_HARDENING.md); rollback y recuperación en [SECURITY_RECOVERY.md](SECURITY_RECOVERY.md).
+El refuerzo publicado está en el merge `3637e7ac8a9bd44ed2d4b4733cb3cdb35adf6e0a`; la corrección de reglas y el checker están en `7a6000ec32997c6ee4367cfb1d9e78ac7da9072c`. La comprobación posterior del edge está completada con cero fallos; los pendientes reales son la reautenticación de GitHub y la primera ejecución futura del cron, descritos arriba. Procedimiento reproducible en [SECURITY_HARDENING.md](SECURITY_HARDENING.md); rollback y recuperación en [SECURITY_RECOVERY.md](SECURITY_RECOVERY.md).
 
 ## Fuentes primarias consultadas
 
