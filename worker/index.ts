@@ -1,5 +1,6 @@
 import type { D1Database } from '@cloudflare/workers-types';
 import { validCounter, type CounterEvent } from '../src/lib/analytics/catalog';
+import { purgeExpiredCounters } from './retention-policy';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -72,8 +73,7 @@ async function collect(request: Request, env: Env): Promise<Response> {
 
 export default {
   async scheduled(_event: unknown, env: Env): Promise<void> {
-    if (env.COUNTERS_ENABLED === 'true' && env.COUNTERS)
-      await env.COUNTERS.prepare("DELETE FROM daily_counts WHERE day <= date('now', '-365 days')").run();
+    await purgeExpiredCounters(env);
   },
   async fetch(request: Request, env: Env, context: Context): Promise<Response> {
     try {

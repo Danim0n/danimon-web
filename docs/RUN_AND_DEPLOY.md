@@ -32,7 +32,7 @@ La base danimon-counters ya existe en jurisdicción UE y contiene el esquema de 
 
 ## Retención
 
-Pages no programa el método scheduled de _worker.js. El Worker específico danimon-counters-retention usa worker/retention.ts y la misma base, con ejecución diaria a las 03:00 UTC. No sirve estadísticas ni necesita rutas del dominio. Su configuración reproducible está en wrangler.retention.jsonc, con logs y workers.dev apagados.
+Pages no programa el método scheduled de _worker.js. El Worker específico danimon-counters-retention ya está desplegado: usa worker/retention.ts y la misma base, con cron diario guardado a las 03:00 UTC. Comparte únicamente la política de borrado con Pages; su bundle no incluye el receptor de eventos. No sirve estadísticas ni necesita rutas del dominio. Su configuración reproducible está en wrangler.retention.jsonc, con logs, workers.dev y previews apagados. Consultar DEPLOYMENT_STATE.md para distinguir configuración verificada de la primera ejecución automática futura.
 
 Si se despliega por CLI en el futuro, usar un token limitado al recurso existente y autorizado, nunca el token amplio por defecto. No guardar credenciales en GitHub, Astro o documentación. No usar wrangler login para eludir esa limitación: su OAuth no permite limitar los permisos a un solo recurso.
 

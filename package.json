@@ -10,7 +10,7 @@
     "preview": "astro preview --host 127.0.0.1",
     "test": "playwright test",
     "test:analytics": "node tools/run-analytics-tests.mjs",
-    "test:counters": "wrangler deploy --dry-run --config wrangler.bundle.jsonc --outdir output/worker-test-build && node --test tools/counter-worker.test.mjs",
+    "test:counters": "wrangler deploy --dry-run --config wrangler.bundle.jsonc --outdir output/worker-test-build && wrangler deploy --dry-run --config wrangler.retention.jsonc --outdir output/retention-worker && node --test tools/counter-worker.test.mjs",
     "test:native": "node tools/check-native-analytics.mjs",
     "test:counters:e2e": "node tools/check-counter-e2e.mjs"
   },

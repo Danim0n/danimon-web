@@ -1,10 +1,10 @@
 # Estadísticas agregadas del portfolio
 
-Actualizado: 5 de noviembre de 2026. Arquitectura Cloudflare exclusiva: frontend → Worker del mismo origen → D1. No se conservan eventos individuales, cookies, IDs de visitante, IP, user-agent, contenido de facturas ni URLs. Cada petición contiene solamente page, language, counter y project, todos enumerados. La fecha UTC la añade el servidor.
+Actualizado: 6 de noviembre de 2026. Arquitectura Cloudflare exclusiva: frontend → Worker del mismo origen → D1. No se conservan eventos individuales, cookies, IDs de visitante, IP, user-agent, contenido de facturas ni URLs. Cada petición contiene solamente page, language, counter y project, todos enumerados. La fecha UTC la añade el servidor.
 
 ## Estado real
 
-Implementación y pruebas locales completas. Tras autorización expresa se creó danimon-counters en jurisdicción UE y se aplicó el esquema en D1 alojado. Publicación preparada mediante Cloudflare Pages y la conexión GitHub existente: incluye el mismo Worker compilado en _worker.js. DNS y planes intactos. El token amplio y el OAuth de cuenta no se han aprobado. Estado remoto actual en DEPLOYMENT_STATE.md.
+Publicado y comprobado en https://danimon-web.pages.dev/ mediante Cloudflare Pages y la conexión GitHub existente: incluye el Worker compilado en _worker.js y la base real danimon-counters, creada en jurisdicción UE. Se verificaron filas remotas de proyectos, CV, contacto e idioma. DNS y planes intactos; danimon.party sigue sin conectarse a este proyecto. No se concedió un token amplio ni OAuth de cuenta. Estado remoto y límites en DEPLOYMENT_STATE.md.
 
 El beacon nativo se conserva pero permanece desactivado por PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED=false. No se sustituye por un banner. Se descartan sus métricas hasta resolver la revisión contractual descrita en CLOUDFLARE_ANALYTICS.md. Los contadores propios pueden funcionar independientemente.
 
@@ -18,7 +18,7 @@ El beacon nativo se conserva pero permanece desactivado por PUBLIC_CLOUDFLARE_EX
 - SitePrivacy.astro y AnalyticsLegal.astro: enlace discreto e información bilingüe.
 - queries/counters.sql: consultas privadas de lectura.
 
-PUBLIC_ANALYTICS_MODE admite off, test (solo localhost) y production (HTTPS y origen exacto PUBLIC_COUNTERS_ORIGIN). El modo off es el valor seguro por defecto de .env.example. Los valores PUBLIC se fijan al compilar; no son secretos. COUNTERS_ENABLED=true y el binding COUNTERS apuntan a la base real en wrangler.jsonc. La publicación inicial prevista usa danimon-web.pages.dev para no tocar DNS; se fija ese mismo origen al compilar. Esto no conecta danimon.party automáticamente. Las ramas de preview se compilan con los contadores apagados.
+PUBLIC_ANALYTICS_MODE admite off, test (solo localhost) y production (HTTPS y origen exacto PUBLIC_COUNTERS_ORIGIN). El modo off es el valor seguro por defecto de .env.example. Los valores PUBLIC se fijan al compilar; no son secretos. COUNTERS_ENABLED=true y el binding COUNTERS apuntan a la base real en wrangler.jsonc. La publicación usa danimon-web.pages.dev para no tocar DNS; se fija ese mismo origen al compilar. Esto no conecta danimon.party automáticamente. Las ramas de preview se compilan con los contadores apagados.
 
 ## Acciones medidas
 
@@ -42,7 +42,7 @@ DNT o GPC desactivan el envío; se comprueban también en servidor. Se eliminan 
 
 El endpoint solo acepta POST JSON del mismo origen, 2 KiB como máximo, de uno a cinco eventos sin duplicados, categorías exactas y sin propiedades extra. Los valores se enlazan a SQL preparado. Presupuesto de 1.200 solicitudes/minuto por isolate, sin identificar direcciones. No es un límite global ni impide bots que falsifiquen cabeceras. No se ofrece SQL arbitrario o endpoint administrativo.
 
-Sin console.log de solicitudes. Los registros de aplicación y del Worker de retención deben permanecer apagados; verificar además ajustes efectivos de Pages en la cuenta. Cloudflare sigue viendo IP/cabeceras a nivel de transporte y puede tratar datos operativos bajo sus condiciones: no afirmar anonimato de toda la infraestructura. Retención de agregados: ventana de un año con borrado diario en el Worker danimon-counters-retention; comprobar su cron después de publicar. Los datos de recuperación del proveedor pueden durar adicionalmente según su contrato.
+Sin console.log de solicitudes. Logs/traces/issues del Worker de retención comprobados apagados; Pages no incorpora un colector de logs propio. Cloudflare sigue viendo IP/cabeceras a nivel de transporte y puede tratar datos operativos bajo sus condiciones: no afirmar anonimato de toda la infraestructura. Retención de agregados: ventana de 365 días con cron diario 0 3 * * * guardado en danimon-counters-retention, sin URLs públicas. Primera ejecución automática futura al cierre de la comprobación. Los datos de recuperación del proveedor pueden durar adicionalmente según su contrato.
 
 El CV debe seguir disponible aunque D1 falle: su escritura se hace en segundo plano. Agotar cuota de Functions puede afectar esa ruta; vigilar consumo y, si ocurre, retirar /cv/* del archivo _routes.json generado y recompilar para servir el PDF estático sin contador. No se activan planes de pago.
 

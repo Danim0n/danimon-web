@@ -103,6 +103,20 @@ test('scheduled retention removes only aggregates older than one year', async ()
   assert.equal((await rows()).results[0].day, new Date().toISOString().slice(0, 10));
 });
 
+test('standalone retention has no public API and respects the UTC retention boundary', async () => {
+  const { default: retention } = await import('../output/retention-worker/retention.js');
+  assert.equal(retention.fetch().status, 404);
+  const day = days => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  for (const age of [366, 365, 364, 0])
+    await database.prepare('INSERT INTO daily_counts VALUES (?,?,?,?,?,?)')
+      .bind(day(age), 'home', 'es', 'cv_download_clicked', 'none', 1).run();
+  await retention.scheduled(null, { COUNTERS: database, COUNTERS_ENABLED: 'false' });
+  assert.equal((await rows()).results.length, 4);
+  await retention.scheduled(null, { COUNTERS_ENABLED: 'true' });
+  await retention.scheduled(null, { COUNTERS: database, COUNTERS_ENABLED: 'true' });
+  assert.deepEqual((await rows()).results.map(row => row.day).sort(), [day(364), day(0)].sort());
+});
+
 
 
 test('disabled counters and missing D1 never prevent assets from loading', async () => {
