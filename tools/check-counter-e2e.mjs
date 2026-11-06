@@ -1,20 +1,14 @@
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import { readFile, writeFile, mkdtemp } from 'node:fs/promises';
-import { resolve, extname, sep } from 'node:path';
+import { resolve } from 'node:path';
+import { builtAssets } from './serve-built-assets.mjs';
 import assert from 'node:assert/strict';
 process.env.PLAYWRIGHT_BROWSERS_PATH ||= process.cwd()+'/.cache/ms-playwright';
 const {chromium} = await import('@playwright/test');
 const site=resolve('output/analytics-test-dist'), persist=await mkdtemp(resolve('output/qa/cloudflare-only/d1-e2e-'));
-const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.pdf':'application/pdf'};
 const server = new Miniflare({...convertV4MiniflareOptions({modules:true,scriptPath:'output/worker-test-build/index.js',compatibilityDate:'2026-08-06',host:'127.0.0.1',port:4334,d1Databases:['COUNTERS'],d1Persist:persist,
   bindings:{PUBLIC_ORIGIN:'http://127.0.0.1:4334',COUNTERS_ENABLED:'true'},
-  serviceBindings:{ASSETS:async request=>{
-    const pathname=decodeURIComponent(new URL(request.url).pathname);
-    const path=resolve(site,'.'+(pathname.endsWith('/')?pathname+'index.html':pathname));
-    if(!path.startsWith(site+sep)) return new Response(null,{status:403});
-    try { return new Response(await readFile(path),{headers:{'Content-Type':mime[extname(path)]||'application/octet-stream'}}); }
-    catch { return new Response('Not found',{status:404}); }
-  }}
+  serviceBindings:{ASSETS:await builtAssets(site)}
 }), resourcePersistencePath:persist});
 let browser;
 try {
