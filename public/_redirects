@@ -1,0 +1,5 @@
+# Removed privacy pages: resolve old cached/bookmarked URLs to the portfolio.
+/privacy / 301
+/privacy/ / 301
+/es/privacidad /es/ 301
+/es/privacidad/ /es/ 301
