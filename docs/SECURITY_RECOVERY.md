@@ -1,29 +1,30 @@
 # Recuperación y ajustes manuales
 
-Estado al cierre de la revisión: rama de seguridad local, sin push/PR/deployment; `main` conserva el estado funcional `5820951131cc8e5639f47b66cc2118facc39dc5e`. No se han borrado ni restaurado datos reales.
+Estado actual: el merge `3637e7ac8a9bd44ed2d4b4733cb3cdb35adf6e0a` publicó el refuerzo desde la base funcional `5820951131cc8e5639f47b66cc2118facc39dc5e` y `f828aaa`. Su primer deployment fue `afd9dd44-725d-49b7-b3b0-cdcb03582d4d`. El arreglo de cabeceras `7a6000ec32997c6ee4367cfb1d9e78ac7da9072c` se publicó como `4ed62b29-4e69-4439-b742-2839a5317e9b`; el checker final dio cero fallos en ambos hosts, con `NEL max_age=0`, sin `Report-To` y CV atendido por Pages Function. La comparación D1 confirmó que el esquema no cambió, las filas anteriores se conservaron y los agregados no disminuyeron. No se han borrado ni restaurado datos reales.
 
 ## Rollback de la aplicación
 
-Antes de cualquier despliegue aprobado, anotar el commit y deployment que aparecen en Production de Pages, y el SHA del merge de seguridad. La base funcional de esta auditoría es la indicada arriba; no asumir que seguirá siendo el último estado si el propietario publica otros cambios.
+Antes de cualquier rollback, confirmar el commit y deployment actuales en Production de Pages. El rollback de aplicación previamente publicado es el deployment `ab10999f-57f3-4b6e-9d41-e79365feb5fc`, basado en `5820951131cc8e5639f47b66cc2118facc39dc5e`. No modificar D1, DNS, cron ni servicios externos.
 
-Si se integró con el merge `--no-ff` propuesto, una reversión explícita y revisable es:
+Si se decide revertir el código publicado en Git, revisar primero los commits posteriores al fix y revertir sus cambios de aplicación en orden inverso. Esto incluye cualquier modificación posterior del checker: evitar conflictos de modificación/borrado al revertir el archivo que añadió `7a6000e`. Los cambios de documentación por sí solos no cambian la aplicación. Después revertir la corrección desplegada y el merge original:
 
 ```powershell
 git switch main
 git pull --ff-only origin main
-git revert -m 1 <SHA_DEL_MERGE_DE_SEGURIDAD>
+git revert 7a6000ec32997c6ee4367cfb1d9e78ac7da9072c
+git revert -m 1 3637e7ac8a9bd44ed2d4b4733cb3cdb35adf6e0a
 git push origin main
 ```
 
-Requiere autorización de despliegue. No usar reset/force-push ni borrar historial. Si se hizo otra estrategia de integración, revisar sus commits concretos y revertirlos; no usar `-m 1` sobre un commit ordinario.
+Estos comandos son instrucciones de recuperación y **no se han ejecutado**. El encargo autoriza recuperar exclusivamente esta publicación ante una regresión grave verificada; para otros casos se requiere autorización de publicación. Revisar conflictos, actualizar esta documentación y repetir build/pruebas críticas antes del push. No usar reset/force-push ni borrar historial. `-m 1` se usa solo para revertir el merge original, no para el commit ordinario de la corrección.
 
-Para una reversión urgente de solo aplicación: Cloudflare → Workers & Pages → `danimon-web` → Deployments → seleccionar el deployment de producción previamente anotado (fuente `5820951` si no hubo otros cambios) → Rollback. Confirmar que es producción, no un preview. Esto tampoco se ha ejecutado. Después reconciliar Git mediante revert para que el siguiente push no reintroduzca la regresión. La reversión de assets no debe modificar D1, DNS, túneles o retención.
+Para una reversión urgente de solo aplicación: Cloudflare → Workers & Pages → `danimon-web` → Deployments → seleccionar el deployment `ab10999f-57f3-4b6e-9d41-e79365feb5fc` (fuente `5820951`) → Rollback. Confirmar que es producción, no un preview. Este rollback no se ha ejecutado. Después reconciliar Git con los reverts indicados arriba para que un push posterior no reintroduzca el cambio. La reversión de assets no debe modificar D1, DNS, túneles o retención.
 
 Los scripts y hashes CSP se regeneran juntos: no copiar hashes de otro build. Si el problema fuera exclusivamente una cabecera, revertir su cambio y compilar de nuevo. HSTS se almacena en navegadores hasta 30 días: quitar la cabecera no borra inmediatamente esa política. Solo si hay una necesidad real y autorización, servir `max-age=0` en los hosts propios afectados. Nunca usar includeSubDomains, preload o una regla global de zona en esta operación.
 
 ## D1 Time Travel: procedimiento preparado, NO ejecutado
 
-Base exclusiva del portfolio: `danimon-counters`, ID `ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2`, binding COUNTERS. La interfaz real mostró Time Travel y una ventana desde el 5 de noviembre de 2026 a las 23:18 (hora mostrada por el dashboard) hasta la revisión del día 6. Es una base reciente: la ventana observada era menor de un día. La documentación permite hasta siete días en Workers Free y 30 en Workers Paid; el plan efectivo de cuenta no se confirmó. No confundir el Free de la zona con el plan de Workers. [Cloudflare indica que Time Travel está activado automáticamente y no tiene coste adicional](https://developers.cloudflare.com/d1/reference/time-travel/).
+Base exclusiva del portfolio: `danimon-counters`, ID `ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2`, binding COUNTERS. La interfaz real mostró Time Travel y una ventana desde el 5 de noviembre de 2026 a las 23:18 (hora mostrada por el dashboard) hasta la revisión del día 6. Es una base reciente: la ventana observada era menor de un día. La documentación permite hasta siete días en Workers Free y 30 en Workers Paid; el plan efectivo de cuenta no se confirmó. No confundir el Free de la zona con el plan de Workers. La consulta posterior a publicar confirmó que el esquema de seis columnas coincide, las filas pasaron de 72 a 91 y las acciones agregadas de 241 a 298, con cada fila previa presente y ningún total menor. Este aumento no identifica visitantes ni permite atribuirlo a una descarga o sesión individual. No se realizó Time Travel restore. [Cloudflare indica que Time Travel está activado automáticamente y no tiene coste adicional](https://developers.cloudflare.com/d1/reference/time-travel/).
 
 Una restauración cambia datos de producción y pierde, en el estado restaurado, escrituras posteriores al punto elegido. Solo procede ante corrupción/error confirmado y con aprobación específica; no es parte de la validación rutinaria de esta rama.
 
@@ -51,7 +52,7 @@ Si la ventana ya expiró y no existe exportación, no afirmar que se recuperará
 
 ## Comprobar retención tras su primera ejecución
 
-Cron observado: `0 3 * * *`; primera ejecución prevista el 7/11/2026 a las 03:00 UTC. Aún no ocurrida al revisar. No se ha ejecutado manualmente el scheduled handler remoto.
+Cron observado: `0 3 * * *`; próxima ejecución prevista el 7/11/2026 a las 03:00 UTC. El historial revisado el 6/11/2026 no tenía ejecuciones y la fecha seguía siendo futura. No se ejecutará manualmente el scheduled handler remoto para adelantar evidencia.
 
 Después de esa fecha, un operador autorizado puede consultar el historial del cron de `danimon-counters-retention` y ejecutar esta consulta de lectura sobre la base correcta:
 
@@ -63,13 +64,12 @@ WHERE day <= date('now', '-365 days');
 
 Una respuesta cero sin datos antiguos no demuestra por sí sola que se ejecutara un borrado; contrastar historial del cron. El test local sí demuestra el límite UTC de 365 días y que registros recientes se conservan. No cambiar cron ni borrar producción para generar evidencia artificial.
 
-## Ajustes de GitHub que quedan para el propietario
+## Estado de controles de GitHub y ajustes pendientes
 
-- Repo `Danim0n/danimon-web` → Settings → Advanced Security → activar Dependency graph y Dependabot alerts. Son controles gratuitos disponibles en este repositorio público. Verificar el estado después; no se han activado desde esta auditoría.
-- Valorar Dependabot security updates sin auto-merge. Sus PR pueden iniciar previews de Pages; decidir antes si se autoriza ese comportamiento. No se añadieron actualizaciones masivas de versiones ni un workflow innecesario.
-- Settings → Branches/Rulesets → crear una protección para `main` que impida force-push y borrado, y exija revisión/comprobaciones apropiadas. Confirmar cómo puede integrar cambios el único mantenedor; no imponer una aprobación imposible o checks inexistentes.
+- Dependency graph, Dependabot alerts y Dependabot security updates están activados. Auto-merge permanece desactivado; no se añadieron actualizaciones masivas de versiones ni un workflow.
+- La regla de protección de `main` se preparó como borrador pero no se guardó: GitHub solicitó confirmar el acceso mediante email. La pestaña de entrega conserva ese borrador. El propietario debe pulsar **Verify via email** y completar la verificación directamente en GitHub; después comprobar/guardar **Protect main history**, Enforcement **Active**, Target branches **Include: Default** (la rama por defecto es `main`), sin bypass, con **Restrict deletions** y **Block force pushes**. Si el borrador caduca, recrearlo desde [Settings → Rules → Rulesets](https://github.com/Danim0n/danimon-web/settings/rules). Confirmar al final que la regla aparece guardada y activa. No activar Restrict updates, Require pull request, firmas, historial lineal o checks inexistentes: el único mantenedor debe poder publicar normalmente.
 - Mantener Secret Protection y Push protection, observadas activas. Revisar Security → Secret scanning sin copiar secretos en informes. Ante un secreto real, revocarlo/rotarlo en su emisor con autorización específica; reescribir Git por sí solo no lo revoca. No se encontró uno en el escaneo local.
-- Settings → GitHub Apps → Cloudflare Workers and Pages → Configure: comprobar acceso solo a los repositorios necesarios y permisos de integración. La instalación encontrada pide reautenticación; ese detalle no quedó verificado. No se han ampliado permisos, enviado correos de verificación ni tocado MFA/credenciales.
+- La instalación de GitHub App `Cloudflare Workers and Pages` pidió reautenticación para revisar sus permisos (ID `145311944`). Abrir [Configure de la instalación](https://github.com/settings/installations/145311944), pulsar **Verify via email** y completar la verificación personalmente. Revisar Repository access y los permisos realmente mostrados; seleccionar únicamente repositorios necesarios si el control lo permite, manteniendo `Danim0n/danimon-web`. No retirar otros repositorios sin comprobar sus despliegues. Los permisos efectivos siguen sin verificarse; no se ampliaron ni se modificaron MFA o credenciales.
 
 ## Protección contra abuso: escalado si aparece un incidente real
 

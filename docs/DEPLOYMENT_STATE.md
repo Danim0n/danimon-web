@@ -1,5 +1,15 @@
 # Estado del despliegue
 
+## Actualización de seguridad — 6 de noviembre de 2026
+
+La rama de seguridad se integró mediante el merge explícito `3637e7ac8a9bd44ed2d4b4733cb3cdb35adf6e0a`. El ajuste posterior `7a6000ec32997c6ee4367cfb1d9e78ac7da9072c` está publicado en producción, deployment `4ed62b29-4e69-4439-b742-2839a5317e9b`, rama `main`. Las comprobaciones públicas finales en ambos dominios pasan: 40 solicitudes acotadas, HTTPS válido, CSP/hashes actuales, cabeceras de seguridad, NEL desactivado y Report-To ausente. El CV pasa por Functions con `no-store`; se renovaron únicamente cuatro URLs exactas de caché del portfolio. No hubo rollback ni cambios DNS, de reglas globales o de otros servicios.
+
+La comparación D1 de esta publicación conserva las 72 filas anteriores y sus totales: referencia de 241 acciones, lectura posterior de 91 filas y 298 acciones, sin filas ausentes ni decrementos. Incluye interacciones controladas de QA; no son visitantes únicos. El esquema y el binding se conservan. No se aplicaron migraciones, restauraciones o borrados remotos.
+
+Dependency graph, Dependabot alerts y security updates quedaron activados, con auto-merge desactivado. La protección de `main` y la revisión de permisos de la aplicación GitHub requieren reautenticación del propietario y **no se dan por completadas**. La primera ejecución del cron de retención sigue pendiente para el 7/11/2026 a las 03:00 UTC. Cloudflare Web Analytics nativo sigue desactivado. Detalles, pruebas, límites y recuperación en [SECURITY_HARDENING.md](SECURITY_HARDENING.md) y [SECURITY_RECOVERY.md](SECURITY_RECOVERY.md). Un commit posterior de documentación no cambia el artefacto de la aplicación; su SHA y deployment se registran al cierre en la evidencia local.
+
+## Publicación inicial del dominio — referencia histórica
+
 6 de noviembre de 2026. Dominio raíz asociado mediante Custom Domains de Pages al proyecto existente danimon-web. https://danimon.party/ y /es/ responden 200 con TLS válido; pages.dev sigue disponible. Se usó la conexión GitHub existente con Danim0n/danimon-web. Ningún token amplio, OAuth de cuenta ni plan de pago concedido.
 
 El único cambio DNS autorizado es un CNAME @ → danimon-web.pages.dev, TTL Auto, creado por el flujo oficial de Pages. La zona estaba activa y delegada en damiete.ns.cloudflare.com y dora.ns.cloudflare.com. Antes solo existía panel → túnel danicore-panel; no había apex, www, A/AAAA, MX, TXT o CAA que sustituir. No se modificaron panel, túneles, correo, nameservers, reglas globales ni otros Workers. Copia previa en output/recovery/domain-production.

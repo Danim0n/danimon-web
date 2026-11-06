@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { connect as tlsConnect } from 'node:tls';
 import { mkdir, writeFile } from 'node:fs/promises';
