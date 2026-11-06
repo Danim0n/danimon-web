@@ -54,8 +54,17 @@ test.describe('Mobile profile gestures', () => {
       .toEqual(['#main','#projects','#about','#stack']);
     const bounds=await trigger.boundingBox();
     if (!bounds) throw new Error('Profile trigger missing');
-    expect(bounds.width).toBeLessThan(90);
-    expect(bounds.height).toBeLessThan(90);
+    expect(bounds.width).toBeLessThan(150);
+    expect(bounds.height).toBeLessThan(150);
+    const preview=await dock.locator('.actions').evaluate(actions=>{
+      const sheet=actions.closest('.sheet')!;
+      const panel=sheet.getBoundingClientRect();
+      return getComputedStyle(sheet).opacity==='1' && [...actions.querySelectorAll('a')].every(link=>{
+        const box=link.getBoundingClientRect();
+        return box.top>=panel.top && box.bottom<=panel.bottom && box.left>=panel.left && box.right<=panel.right;
+      });
+    });
+    expect(preview).toBe(true);
     const contextMenuAllowed=await trigger.evaluate(element=>element.dispatchEvent(
       new MouseEvent('contextmenu',{bubbles:true,cancelable:true}),
     ));
@@ -75,7 +84,7 @@ test.describe('Mobile profile gestures', () => {
     await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
     await page.setViewportSize({width:844,height:390});
-    await expect.poll(async()=> (await trigger.boundingBox())?.width ?? Infinity).toBeLessThan(90);
+    await expect.poll(async()=> (await trigger.boundingBox())?.width ?? Infinity).toBeLessThan(150);
   });
 });
 

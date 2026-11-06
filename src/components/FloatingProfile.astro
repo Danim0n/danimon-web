@@ -449,11 +449,13 @@ const recipient = encodeURIComponent(email);
   @media (max-width: 740px), (pointer: coarse) and (max-width: 1024px) {
     details {
       --size: min(300px, calc(100vw - 2rem), calc(100dvh - 2rem));
-      transform: scale(.26);
+      transform: scale(.45);
     }
     details[open] { transform: scale(1); }
-    /* A small photo is the touch trigger; actions remain full size when open. */
-    details:not([open]) .sheet { opacity: 0; }
+    /* Keep the original action strip visible in the compact preview. */
+    details:not([open]) .sheet { top: 74%; }
+    details:not([open]) .actions a { font-size: 1.3rem; }
+    details:not([open]) .actions img { width: 24px; height: 24px; }
   }
   @media (prefers-reduced-motion: reduce) {
     .mail-surface, .mail-options { transition: none; }
