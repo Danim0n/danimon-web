@@ -144,6 +144,7 @@ test('privacy signals produce no row or cookie', async () => {
 test('PDF response counter records GET 200, not HEAD or partial responses', async () => {
   const url = origin + '/cv/daniel-rosell-martin.pdf';
   assert.equal((await worker.fetch(url, { method: 'HEAD' })).status, 200);
+  assert.equal((await worker.fetch(url, { method: 'HEAD' })).headers.get('Cache-Control'), 'no-store');
   assert.equal((await worker.fetch(url, { headers: { Range: 'bytes=0-5' } })).status, 206);
   assert.equal((await rows()).results.length, 0);
   assert.equal((await worker.fetch(url)).status, 200);

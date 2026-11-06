@@ -106,7 +106,12 @@ export default {
       const headers = new Headers(asset.headers);
       for (const [name, value] of Object.entries(securityHeaders))
         if (!headers.has(name)) headers.set(name, value);
-      if (url.pathname.startsWith('/cv/')) headers.set('Content-Security-Policy', inertResponseCsp);
+      if (url.pathname.startsWith('/cv/')) {
+        headers.set('Content-Security-Policy', inertResponseCsp);
+        // Each delivery must pass this Worker: an outer CDN cache would retain old
+        // headers and bypass the aggregate response counter on subsequent downloads.
+        headers.set('Cache-Control', 'no-store');
+      }
       headers.set('NEL', '{"max_age":0}');
       headers.delete('Report-To');
       return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });

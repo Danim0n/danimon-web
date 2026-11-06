@@ -11,7 +11,7 @@
     "test": "playwright test",
     "test:analytics": "node tools/run-analytics-tests.mjs",
     "test:counters": "wrangler deploy --dry-run --config wrangler.bundle.jsonc --outdir output/worker-test-build && wrangler deploy --dry-run --config wrangler.retention.jsonc --outdir output/retention-worker && node --test tools/counter-worker.test.mjs tools/write-budget.test.mjs",
-    "test:security": "node tools/security-browser-qa.mjs",
+    "test:security": "node --test tools/security-headers.test.mjs && node tools/security-browser-qa.mjs",
     "preview:security": "node tools/security-preview.mjs",
     "test:native": "node tools/check-native-analytics.mjs",
     "test:counters:e2e": "node tools/check-counter-e2e.mjs"

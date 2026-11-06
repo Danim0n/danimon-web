@@ -9,9 +9,15 @@ const types = { '.html':'text/html; charset=utf-8', '.js':'text/javascript', '.c
 export async function builtAssets(directory, { reportOnly = false } = {}) {
   const root = resolve(directory);
   const rules = [];
+  const rulePaths = new Set();
   for (const line of (await readFile(resolve(root, '_headers'), 'utf8')).split(/\r?\n/)) {
     if (!line.trim() || line.startsWith('#')) continue;
-    if (!/^\s/.test(line)) rules.push({ path:line.trim(), entries:[] });
+    if (!/^\s/.test(line)) {
+      const path = line.trim();
+      if (rulePaths.has(path)) throw new Error(`Duplicate _headers rule: ${path}`);
+      rulePaths.add(path);
+      rules.push({ path, entries:[] });
+    }
     else {
       const text = line.trim();
       const colon = text.indexOf(':');
@@ -22,9 +28,13 @@ export async function builtAssets(directory, { reportOnly = false } = {}) {
   return async request => {
     const url = new URL(request.url);
     const headers = new Headers();
+    const appliedHeaders = new Set();
     for (const rule of rules) {
       if (rule.path !== '/*' && rule.path !== url.pathname) continue;
       for (let [name,value] of rule.entries) {
+        const key = name.toLowerCase();
+        if (appliedHeaders.has(key)) throw new Error(`Header ${name} is applied more than once to ${url.pathname}`);
+        appliedHeaders.add(key);
         if (reportOnly && name.toLowerCase() === 'content-security-policy') name = 'Content-Security-Policy-Report-Only';
         if (value === null) headers.delete(name); else headers.set(name,value);
       }
