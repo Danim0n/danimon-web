@@ -6,7 +6,7 @@ process.env.ASTRO_TELEMETRY_DISABLED = '1';
 process.env.PLAYWRIGHT_BROWSERS_PATH ||= `${process.cwd()}/.cache/ms-playwright`;
 const { chromium } = await import('@playwright/test');
 process.env.PUBLIC_ANALYTICS_MODE = 'production';
-process.env.PUBLIC_COUNTERS_ORIGIN = 'https://danimon.party';
+process.env.PUBLIC_COUNTERS_ORIGINS = '["https://danimon.party","https://danimon-web.pages.dev"]';
 process.env.PUBLIC_CLOUDFLARE_TOKEN = '00000000000000000000000000000000';
 process.env.PUBLIC_CLOUDFLARE_MANUAL_AUDITED = 'true';
 const output = 'output/qa/cloudflare-only';
@@ -26,7 +26,7 @@ try {
     const config = {outDir:`./output/native-check-${reviewed}/`, server:{host:'127.0.0.1',port:4332}};
     await build(config);
     server = await preview(config);
-    const cases = reviewed ? ['allowed','dnt','gpc','query','fragment','duplicate','unsafe-referrer'] : ['legal-gate'];
+    const cases = reviewed ? ['allowed','allowed-pages','preview-blocked','dnt','gpc','query','fragment','duplicate','unsafe-referrer'] : ['legal-gate'];
     for (const scenario of cases) {
       const context = await browser.newContext({extraHTTPHeaders: scenario === 'dnt' ? {DNT:'1'} : {}});
       const page = await context.newPage();
@@ -44,7 +44,7 @@ try {
         if (url.hostname === 'cloudflareinsights.com' || url.pathname === '/cdn-cgi/rum') {
           network.rum++; return route.fulfill({status:204,body:''});
         }
-        if (url.origin === 'https://danimon.party') {
+        if (['https://danimon.party','https://danimon-web.pages.dev','https://preview.danimon-web.pages.dev'].includes(url.origin)) {
           if (url.pathname === '/api/interactions') {network.counters++; return route.fulfill({status:204,body:''});}
           const response = await route.fetch({url:'http://127.0.0.1:4332'+url.pathname+url.search});
           if (scenario === 'duplicate' && url.pathname === '/') {
@@ -56,13 +56,16 @@ try {
         network.unexpected.push(url.hostname); return route.abort();
       });
       const suffix = scenario === 'query' ? '?private=fixture' : scenario === 'fragment' ? '#fixture' : '';
-      await page.goto('https://danimon.party/'+suffix, scenario === 'unsafe-referrer' ? {referer:'https://example.org/private?fixture=1'} : {});
+      const host = scenario === 'allowed-pages' ? 'https://danimon-web.pages.dev' : scenario === 'preview-blocked' ? 'https://preview.danimon-web.pages.dev' : 'https://danimon.party';
+      await page.goto(host+'/'+suffix, scenario === 'unsafe-referrer' ? {referer:'https://example.org/private?fixture=1'} : {});
       await page.waitForTimeout(1300);
       const scripts = await page.locator('script[src*="static.cloudflareinsights.com"]').count();
       const storage = await page.evaluate(() => ({local:Object.keys(localStorage),session:Object.keys(sessionStorage)}));
-      assert.equal(network.beacons, scenario === 'allowed' ? 1 : 0);
-      assert.equal(scripts, scenario === 'allowed' ? 1 : 0);
-      if (scenario === 'allowed' && official) assert.ok(network.rum >= 1, 'official beacon must generate intercepted RUM');
+      const shouldEnable = ['allowed','allowed-pages'].includes(scenario);
+      assert.equal(network.beacons, shouldEnable ? 1 : 0);
+      assert.equal(scripts, shouldEnable ? 1 : 0);
+      if (shouldEnable && official) assert.ok(network.rum >= 1, 'official beacon must generate intercepted RUM');
+      if (['allowed-pages','preview-blocked'].includes(scenario)) assert.equal(network.counters > 0, scenario === 'allowed-pages');
       assert.deepEqual(network.unexpected, []);
       assert.deepEqual(storage,{local:[],session:[]});
       assert.deepEqual(await context.cookies(),[]);
@@ -79,5 +82,5 @@ try {
 } finally {
   await server?.stop(); await browser?.close();
   // Astro may retain its build pool on Windows.
-  process.exit(results.length === 8 ? 0 : 1);
+  process.exit(results.length === 10 ? 0 : 1);
 }

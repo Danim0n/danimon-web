@@ -1,6 +1,6 @@
 # Validación de estadísticas
 
-6 de noviembre de 2026. Pruebas locales en Windows y Chromium, más publicación y recepción remota comprobadas en danimon-web.pages.dev. El dominio danimon.party no está conectado a ese despliegue.
+6 de noviembre de 2026. Pruebas locales en Windows y Chromium, más publicación y recepción remota comprobadas inicialmente en danimon-web.pages.dev. El dominio danimon.party se ha asociado después mediante Pages; la revisión específica se conserva en output/qa/domain-production y output/DOMAIN_PRODUCTION_REPORT.md.
 
 ## Resultados reproducibles
 
@@ -9,8 +9,8 @@
 | npm run build | Once páginas; Astro check sin errores, avisos ni sugerencias |
 | npm test, preview 4325 del dist actual | 10/10, idiomas, móvil, axe, contacto, CV, carrusel y demo |
 | npm run test:analytics | 12/12, acciones con cuatro campos fijos y clic real de ratón; endpoint interceptado |
-| npm run test:counters | 12/12, Worker y módulo de retención compilados; D1 local con workerd/SQLite |
-| npm run test:native | 8/8, origen HTTPS simulado y script oficial, red de medición interceptada |
+| npm run test:counters | 14/14, Worker y retención; ambos orígenes, Origin cruzado, previews y CV; D1 local |
+| npm run test:native | 10 casos, origen HTTPS simulado y script oficial, red interceptada; apex, pages.dev y preview |
 | node tools/check-counter-e2e.mjs | Frontend → Worker → D1 local, sin interceptar el endpoint |
 
 Frontend: DNT/GPC, ausencia de cookies/IDs persistentes, limpieza selectiva de claves antiguas, cada contacto, idiomas, cuatro proyectos, drag, scroll real y errores de endpoint sin bloquear navegación. El hover y la rotación automática no suman aperturas deliberadas. El guardado funcional de la demo conserva su almacenamiento propio.
@@ -41,6 +41,8 @@ Worker de retención desplegado, código comparado con el bundle local, COUNTERS
 
 Capturas públicas abiertas: contacto y selector, portada, giro y shader en dos fotogramas distintos. El navegador conectado permaneció a 1920 px pese al override solicitado; se restableció y esa evidencia se etiqueta escritorio. La evidencia móvil corresponde a las pruebas locales de 390/360 px. En el navegador con extensiones se registró un aviso de canal de mensajería asíncrono cerrado; no se reproduce en las suites locales limpias, que no registraron errores. No se oculta bajo una afirmación de consola remota completamente vacía.
 
-Dependencias finales: npm audit completo, incluidas las de desarrollo, cero vulnerabilidades. Build Pages final sin diagnósticos. DNS intacto; el dominio personalizado y la revisión contractual no están resueltos. Detalles en DEPLOYMENT_STATE.md.
+Regresión del ajuste de dominios: suite portfolio 10/10, frontend 12/12, Worker 14/14, beacon 10 casos, E2E local correcto y npm audit completo cero vulnerabilidades. Build Pages sin diagnósticos. Capturas móviles EN/ES de 390 px abiertas: la tarjeta flotante puede cubrir texto inferior, comportamiento previo que no se ha rediseñado. El script adicional de comprobación WebGL local no llegó a iniciar Chromium por su ruta de binario; no se presenta como prueba superada en esta revisión.
+
+DNS modificado únicamente para el apex mediante Pages; revisión contractual sigue pendiente. Las comprobaciones públicas de rutas/recursos/TLS y la comparación D1 antes/después desde el dominio definitivo se registran en output/qa/domain-production y output/DOMAIN_PRODUCTION_REPORT.md. Detalles de asociación en DEPLOYMENT_STATE.md.
 
 Revisión contractual del beacon y del tratamiento operativo del proveedor pendiente; PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED permanece false. No se certifica cumplimiento jurídico ni rendimiento sobre hardware móvil real.

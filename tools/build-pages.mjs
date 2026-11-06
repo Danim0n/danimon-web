@@ -12,9 +12,20 @@ for (const [name, value] of Object.entries(runtime.vars ?? {}))
 const database = runtime.d1_databases?.find(binding => binding.binding === 'COUNTERS');
 if (!database?.database_id || runtime.vars?.COUNTERS_ENABLED !== 'true')
   throw new Error('Pages runtime requires the configured COUNTERS database binding.');
-if (process.env.PUBLIC_ANALYTICS_MODE === 'production' &&
-    process.env.PUBLIC_COUNTERS_ORIGIN !== runtime.vars.PUBLIC_ORIGIN)
-  throw new Error('Frontend and Pages runtime must use the same production origin.');
+if (process.env.PUBLIC_ANALYTICS_MODE === 'production') {
+  const expected = ['https://danimon.party', 'https://danimon-web.pages.dev'];
+  let frontendOrigins, workerOrigins;
+  try {
+    frontendOrigins = JSON.parse(process.env.PUBLIC_COUNTERS_ORIGINS ?? 'null');
+    workerOrigins = JSON.parse(runtime.vars.PUBLIC_ORIGINS ?? 'null');
+  } catch { throw new Error('Frontend and Pages runtime origins must be valid JSON arrays.'); }
+  const normalized = value => Array.isArray(value) ? [...new Set(value)].sort() : null;
+  if (JSON.stringify(normalized(frontendOrigins)) !== JSON.stringify([...expected].sort()) ||
+      JSON.stringify(normalized(workerOrigins)) !== JSON.stringify([...expected].sort()) ||
+      JSON.stringify(normalized(frontendOrigins)) !== JSON.stringify(normalized(workerOrigins)) ||
+      runtime.vars.PUBLIC_ORIGIN !== 'https://danimon.party')
+    throw new Error('Frontend and Pages runtime must allow exactly the apex domain and production Pages hostname.');
+}
 console.log(`Pages runtime configuration: COUNTERS -> ${database.database_name} (${database.database_id}); enabled=true`);
 // Preview branches do not contribute to production statistics.
 if (process.env.CF_PAGES && process.env.CF_PAGES_BRANCH !== 'main')

@@ -1,6 +1,8 @@
 # Estado del despliegue
 
-6 de noviembre de 2026. Publicado en https://danimon-web.pages.dev/ y /es/. Se usó la conexión GitHub existente con Danim0n/danimon-web. DNS, dominio personalizado y planes intactos; ningún token amplio ni OAuth de cuenta concedido.
+6 de noviembre de 2026. Dominio raíz asociado mediante Custom Domains de Pages al proyecto existente danimon-web. https://danimon.party/ y /es/ responden 200 con TLS válido; pages.dev sigue disponible. Se usó la conexión GitHub existente con Danim0n/danimon-web. Ningún token amplio, OAuth de cuenta ni plan de pago concedido.
+
+El único cambio DNS autorizado es un CNAME @ → danimon-web.pages.dev, TTL Auto, creado por el flujo oficial de Pages. La zona estaba activa y delegada en damiete.ns.cloudflare.com y dora.ns.cloudflare.com. Antes solo existía panel → túnel danicore-panel; no había apex, www, A/AAAA, MX, TXT o CAA que sustituir. No se modificaron panel, túneles, correo, nameservers, reglas globales ni otros Workers. Copia previa en output/recovery/domain-production.
 
 ## Verificado
 
@@ -20,12 +22,16 @@ La primera ejecución automática de retención todavía es futura. El botón de
 
 Cloudflare Web Analytics nativo no recibe mediciones nuevas de este despliegue mientras PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED=false. No se afirma que sus métricas estén operativas; se descartan hasta acreditar las garantías descritas en CLOUDFLARE_ANALYTICS.md.
 
-danimon.party no está conectado a este proyecto Pages. La petición HTTPS al dominio no se pudo completar desde el entorno de comprobación. Conectarlo requeriría autorización para dominio/DNS y ajustar ambos orígenes; no se ha hecho. Las conclusiones remotas se refieren a pages.dev.
+El ajuste de orígenes se publica mediante GitHub: PUBLIC_ORIGINS y PUBLIC_COUNTERS_ORIGINS contienen exactamente https://danimon.party y https://danimon-web.pages.dev; el origen principal es el apex. Los previews y otros subdominios quedan fuera. La referencia D1 previa a esta publicación contiene 43 filas y 80 interacciones: se conserva sin reiniciar ni borrar. Las comprobaciones finales de commit efectivo e incrementos desde el apex se registran en output/qa/domain-production y en el informe local output/DOMAIN_PRODUCTION_REPORT.md, después del despliegue. No confundir esa referencia previa con estadísticas de visitantes.
+
+www no estaba configurado y no se ha añadido. No es necesario para servir el dominio raíz solicitado.
 
 No se acreditan contractualmente todos los plazos de logs internos, transferencias ni recuperación del proveedor. La base no conserva IP/IDs, pero Cloudflare procesa datos de transporte. No se presenta la solución como certificada jurídicamente.
 
 ## Evidencias
 
 Locales e ignoradas por Git, bajo output/qa/cloudflare-only: d1-public-summary.png/json, d1-public-rows.json, public-contact.png, public-desktop-home.png, public-motion-0.png y public-motion-1.png, public-origins-audit.json, pages-auto-beacon-disabled.png, pages-metrics.txt, retention-code.png, retention-bindings.png y retention-configured.png. Las capturas se abrieron e inspeccionaron.
+
+La revisión del dominio añade output/qa/domain-production/http.json: rutas EN/ES, fichas, demo, privacidad/cookies, 404, robots, sitemap, canonical, hreflang y 29 assets, incluidos los motores WASM y datos OCR. La comprobación HTTPS inicial obtuvo 155 verificaciones correctas. Certificado Google Trust Services WE1 para danimon.party, válido hasta el 4 de febrero de 2027 a las 12:53:53 UTC, conexión TLS 1.3 validada. HTTP redirige con 301 a HTTPS sin bucle.
 
 El override móvil del navegador conectado no cambió el ancho efectivo (1920 px); no se etiqueta esa captura como móvil. La validación móvil real se hizo en Chromium local a 390 y 360 px, con las capturas y pruebas detalladas en ANALYTICS_VALIDATION.md.

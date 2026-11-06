@@ -4,8 +4,11 @@ import { cloudflareProvider, safeCloudflareDocument } from './providers';
 
 const mode = import.meta.env.PUBLIC_ANALYTICS_MODE ?? 'off';
 const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-const origin = import.meta.env.PUBLIC_COUNTERS_ORIGIN ?? 'https://danimon.party';
-const enabled = (mode === 'test' && local) || (mode === 'production' && location.origin === origin && location.protocol === 'https:');
+const configuredOrigins = import.meta.env.PUBLIC_COUNTERS_ORIGINS;
+const allowedOrigins: string[] = configuredOrigins
+  ? (() => { try { const value: unknown = JSON.parse(configuredOrigins); return Array.isArray(value) && value.every(origin => typeof origin === 'string') ? value : []; } catch { return []; } })()
+  : [import.meta.env.PUBLIC_COUNTERS_ORIGIN ?? 'https://danimon.party'];
+const enabled = (mode === 'test' && local) || (mode === 'production' && allowedOrigins.includes(location.origin) && location.protocol === 'https:');
 const seen = new Set<string>();
 const previous = new Map<string, number>();
 const context = pageContext();

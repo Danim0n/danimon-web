@@ -4,7 +4,7 @@ El archivo wrangler.bundle.jsonc solo compila JavaScript. Su resumen «No bindin
 
 La [documentación oficial de Pages](https://developers.cloudflare.com/pages/functions/wrangler-configuration/) establece ese archivo como configuración de desarrollo y despliegue; se aplica creando una publicación mediante integración Git. Las [vinculaciones D1](https://developers.cloudflare.com/pages/functions/bindings/#d1-databases) se configuran ahí o en el panel. Los bindings no son credenciales incrustadas dentro del código compilado.
 
-La compilación build:pages verifica que exista el binding y que el origen público coincida con el de ejecución. El paquete contiene _worker.js y _routes.json, además de los assets.
+La compilación build:pages verifica que exista el binding y que las listas de orígenes de cliente y ejecución coincidan exactamente con el apex y el hostname de producción pages.dev. El paquete contiene _worker.js y _routes.json, además de los assets.
 
 ## Prueba independiente
 

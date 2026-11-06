@@ -6,6 +6,8 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 let runtime, database, worker;
 const origin = 'https://danimon.party';
+const pagesOrigin = 'https://danimon-web.pages.dev';
+const allowedOrigins = [origin, pagesOrigin];
 const event = { page: 'home', language: 'es', counter: 'cv_download_clicked', project: 'none' };
 before(async () => {
   const testRoot = resolve('output/qa/cloudflare-only');
@@ -13,7 +15,7 @@ before(async () => {
   const d1Path = await mkdtemp(join(testRoot, 'd1-test-'));
   runtime = new Miniflare({...convertV4MiniflareOptions({
     modules: true, scriptPath: 'output/worker-test-build/index.js', compatibilityDate: '2026-08-06',
-    bindings: { PUBLIC_ORIGIN: origin, COUNTERS_ENABLED: 'true' }, d1Databases: ['COUNTERS'], d1Persist: d1Path,
+    bindings: { PUBLIC_ORIGIN: origin, PUBLIC_ORIGINS: JSON.stringify(allowedOrigins), COUNTERS_ENABLED: 'true' }, d1Databases: ['COUNTERS'], d1Persist: d1Path,
     serviceBindings: { ASSETS: request => new Response('PDF or page', { status: request.headers.has('Range') ? 206 : 200 }) },
   }), resourcePersistencePath:d1Path});
   database = await runtime.getD1Database('COUNTERS');
@@ -23,8 +25,8 @@ before(async () => {
 });
 beforeEach(async () => { await database.prepare('DELETE FROM daily_counts').run(); });
 after(async () => { await runtime?.dispose(); });
-const send = (body, headers = {}) => worker.fetch(origin + '/api/interactions', {
-  method: 'POST', headers: { Origin: origin, 'Sec-Fetch-Site': 'same-origin', 'Content-Type': 'application/json', ...headers },
+const send = (body, headers = {}, requestOrigin = origin) => worker.fetch(requestOrigin + '/api/interactions', {
+  method: 'POST', headers: { Origin: requestOrigin, 'Sec-Fetch-Site': 'same-origin', 'Content-Type': 'application/json', ...headers },
   body: JSON.stringify(body),
 });
 const rows = () => database.prepare('SELECT * FROM daily_counts ORDER BY counter').all();
@@ -36,6 +38,16 @@ test('valid action increments only aggregate columns', async () => {
   assert.deepEqual(Object.keys(results[0]).sort(), ['counter', 'day', 'language', 'page', 'project', 'total']);
   assert.equal(results[0].day, new Date().toISOString().slice(0, 10));
   assert.equal(results[0].total, 1);
+});
+test('both exact production hosts are admitted; previews, subdomains and crossed Origins are rejected', async () => {
+  for (const host of allowedOrigins) assert.equal((await send([event], {}, host)).status, 204);
+  for (const host of ['https://preview.danimon-web.pages.dev', 'https://other.pages.dev', 'https://www.danimon.party'])
+    assert.equal((await send([event], {}, host)).status, 403);
+  assert.equal((await send([event], { Origin: pagesOrigin }, origin)).status, 403);
+  assert.equal((await send([event], { Origin: origin }, pagesOrigin)).status, 403);
+  const { results } = await rows();
+  assert.equal(results.length, 1);
+  assert.equal(results[0].total, 2);
 });
 test('100 concurrent increments are atomic', async () => {
   const responses = await Promise.all(Array.from({ length: 100 }, () => send([event])));
@@ -89,6 +101,17 @@ test('PDF response counter records GET 200, not HEAD or partial responses', asyn
   assert.equal((await rows()).results[0].counter, 'cv_response_served');
   assert.equal((await rows()).results[0].page, 'cv-document');
   assert.equal((await rows()).results[0].total, 1);
+});
+test('PDF response counter works on both exact production hosts only', async () => {
+  for (const host of allowedOrigins) {
+    await worker.fetch(host + '/cv/daniel-rosell-martin.pdf');
+    for (let i = 0; i < 30 && (await rows()).results.length < allowedOrigins.indexOf(host) + 1; i++) await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  await worker.fetch('https://preview.danimon-web.pages.dev/cv/daniel-rosell-martin.pdf');
+  for (let i = 0; i < 30 && (await rows()).results.length < 2; i++) await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal((await rows()).results.length, 1); // Rows are grouped by UTC day and event.
+  assert.equal((await rows()).results[0].counter, 'cv_response_served');
+  assert.equal((await rows()).results[0].total, 2);
 });
 test('there is no public administrative or reporting endpoint', async () => {
   for (const path of ['/api/stats', '/api/admin', '/api/portfolio/analytics'])

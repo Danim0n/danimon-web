@@ -6,12 +6,25 @@ interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
   COUNTERS?: D1Database;
   PUBLIC_ORIGIN: string;
+  PUBLIC_ORIGINS?: string;
   COUNTERS_ENABLED?: string;
 }
 interface Context { waitUntil(promise: Promise<unknown>): void }
 // A shared isolate budget, not a map of visitors or addresses.
 let windowStart = 0;
 let requests = 0;
+function isAllowedOrigin(origin: string, env: Env): boolean {
+  // Production supplies an exact JSON list. Keep the singleton fallback for local tests/dev.
+  let allowed = [env.PUBLIC_ORIGIN];
+  if (env.PUBLIC_ORIGINS) {
+    try {
+      const parsed: unknown = JSON.parse(env.PUBLIC_ORIGINS);
+      if (!Array.isArray(parsed) || !parsed.every(value => typeof value === 'string')) return false;
+      allowed = parsed;
+    } catch { return false; }
+  }
+  return allowed.includes(origin);
+}
 const increment = `INSERT INTO daily_counts (day,page,language,counter,project,total)
 VALUES (?,?,?,?,?,1) ON CONFLICT(day,page,language,counter,project)
 DO UPDATE SET total = daily_counts.total + 1`;
@@ -38,7 +51,7 @@ async function collect(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'POST') return response(405);
   if (env.COUNTERS_ENABLED !== 'true' || !env.COUNTERS) return response(503);
   const origin = new URL(request.url).origin;
-  if (origin !== env.PUBLIC_ORIGIN || request.headers.get('Origin') !== origin) return response(403);
+  if (!isAllowedOrigin(origin, env) || request.headers.get('Origin') !== origin) return response(403);
   const site = request.headers.get('Sec-Fetch-Site');
   if (site && site !== 'same-origin') return response(403);
   if (request.headers.get('DNT') === '1' || request.headers.get('Sec-GPC') === '1') return response(204);
@@ -85,7 +98,7 @@ export default {
       const asset = await env.ASSETS.fetch(request);
       if (url.pathname === '/cv/daniel-rosell-martin.pdf' && !url.search && request.method === 'GET' &&
           !request.headers.has('Range') && asset.status === 200 && env.COUNTERS_ENABLED === 'true' &&
-          env.COUNTERS && new URL(request.url).origin === env.PUBLIC_ORIGIN &&
+          env.COUNTERS && isAllowedOrigin(new URL(request.url).origin, env) &&
           request.headers.get('DNT') !== '1' && request.headers.get('Sec-GPC') !== '1' && budgetAvailable()) {
         // HTTP 200 response prepared, not a completed transfer or document reading.
         context.waitUntil(add(env, [{ page: 'cv-document', language: 'es', counter: 'cv_response_served', project: 'none' }]).catch(() => {}));

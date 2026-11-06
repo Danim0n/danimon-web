@@ -22,7 +22,8 @@ Se utiliza la conexión existente de Cloudflare con Danim0n/danimon-web, sin aut
 
 - Proyecto Pages: danimon-web; rama main; Node 24.
 - Build command: npm run build:pages; output: dist.
-- PUBLIC_ANALYTICS_MODE=production; PUBLIC_COUNTERS_ORIGIN=https://danimon-web.pages.dev.
+- PUBLIC_ANALYTICS_MODE=production; PUBLIC_ORIGIN=https://danimon.party.
+- PUBLIC_COUNTERS_ORIGINS y PUBLIC_ORIGINS: cadenas JSON con exactamente https://danimon.party y https://danimon-web.pages.dev.
 - PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED=false hasta resolver garantías jurídicas.
 - wrangler.jsonc contiene COUNTERS y las variables de ejecución para Pages.
 
@@ -40,6 +41,8 @@ Si se despliega por CLI en el futuro, usar un token limitado al recurso existent
 
 Tras publicar: probar acciones y filas D1, CV, idiomas, red, almacenamiento, rutas administrativas 404, logs efectivos, cron y ausencia de beacon inesperado. El preview Astro no ejecuta el endpoint de Pages.
 
-No cambiar DNS automáticamente. La URL pages.dev permite verificar el portfolio sin conectar danimon.party. Conectar el dominio requiere autorización aparte y ajustar los dos orígenes de build/ejecución.
+El dominio raíz se asoció por el flujo Custom Domains de Pages con autorización expresa y un único CNAME @ → danimon-web.pages.dev. No crear una asociación solo mediante DNS manual ni tocar panel, túneles, correo, nameservers o reglas compartidas. www permanece sin configurar. El build comprueba que cliente y Worker tengan los mismos dos orígenes exactos; no usar comodines ni aceptar previews.
+
+node tools/check-domain-http.mjs realiza comprobaciones públicas de lectura sobre el apex: rutas, assets, metadatos, TLS y redirección. Usa HEAD para el PDF y no suma una entrega. Las pruebas de clics reales requieren una referencia SELECT anterior y posterior en D1, con sus incrementos identificados como comprobaciones. Consultar output/DOMAIN_PRODUCTION_REPORT.md para el resultado de la última revisión, sin dar por recibido un evento solo por un 204.
 
 Para detener escrituras: COUNTERS_ENABLED=false y republicar. Para detener envíos: PUBLIC_ANALYTICS_MODE=off y recompilar. Los backups locales de código están en output/recovery; no incluyen una copia de la base alojada. No borrar bases, cuentas o recursos como parte de la reversión sin una decisión expresa.

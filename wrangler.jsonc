@@ -4,8 +4,8 @@
   "compatibility_date": "2026-08-06",
   "send_metrics": false,
   "vars": {
-    "PUBLIC_ORIGIN": "https://danimon-web.pages.dev", "COUNTERS_ENABLED": "true",
-    "PUBLIC_ANALYTICS_MODE": "production", "PUBLIC_COUNTERS_ORIGIN": "https://danimon-web.pages.dev",
+    "PUBLIC_ORIGIN": "https://danimon.party", "PUBLIC_ORIGINS": "[\"https://danimon.party\",\"https://danimon-web.pages.dev\"]", "COUNTERS_ENABLED": "true",
+    "PUBLIC_ANALYTICS_MODE": "production", "PUBLIC_COUNTERS_ORIGINS": "[\"https://danimon.party\",\"https://danimon-web.pages.dev\"]",
     "PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED": "false", "NODE_VERSION": "24"
   },
   "d1_databases": [{

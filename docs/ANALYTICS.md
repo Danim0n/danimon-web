@@ -4,7 +4,7 @@ Actualizado: 6 de noviembre de 2026. Arquitectura Cloudflare exclusiva: frontend
 
 ## Estado real
 
-Publicado y comprobado en https://danimon-web.pages.dev/ mediante Cloudflare Pages y la conexión GitHub existente: incluye el Worker compilado en _worker.js y la base real danimon-counters, creada en jurisdicción UE. Se verificaron filas remotas de proyectos, CV, contacto e idioma. DNS y planes intactos; danimon.party sigue sin conectarse a este proyecto. No se concedió un token amplio ni OAuth de cuenta. Estado remoto y límites en DEPLOYMENT_STATE.md.
+Publicado mediante Cloudflare Pages y la conexión GitHub existente: incluye el Worker compilado en _worker.js y la base real danimon-counters, creada en jurisdicción UE. Se verificaron filas remotas de proyectos, CV, contacto e idioma en pages.dev. El dominio raíz danimon.party ya se ha asociado y sirve HTTPS; el ajuste del receptor admite ambos orígenes exactos. Los incrementos controlados desde el apex y el commit final se documentan tras la publicación en output/DOMAIN_PRODUCTION_REPORT.md. No se concedió un token amplio ni OAuth de cuenta. Estado remoto y límites en DEPLOYMENT_STATE.md.
 
 El beacon nativo se conserva pero permanece desactivado por PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED=false. No se sustituye por un banner. Se descartan sus métricas hasta resolver la revisión contractual descrita en CLOUDFLARE_ANALYTICS.md. Los contadores propios pueden funcionar independientemente.
 
@@ -18,7 +18,7 @@ El beacon nativo se conserva pero permanece desactivado por PUBLIC_CLOUDFLARE_EX
 - SitePrivacy.astro y AnalyticsLegal.astro: enlace discreto e información bilingüe.
 - queries/counters.sql: consultas privadas de lectura.
 
-PUBLIC_ANALYTICS_MODE admite off, test (solo localhost) y production (HTTPS y origen exacto PUBLIC_COUNTERS_ORIGIN). El modo off es el valor seguro por defecto de .env.example. Los valores PUBLIC se fijan al compilar; no son secretos. COUNTERS_ENABLED=true y el binding COUNTERS apuntan a la base real en wrangler.jsonc. La publicación usa danimon-web.pages.dev para no tocar DNS; se fija ese mismo origen al compilar. Esto no conecta danimon.party automáticamente. Las ramas de preview se compilan con los contadores apagados.
+PUBLIC_ANALYTICS_MODE admite off, test (solo localhost) y production (HTTPS y pertenencia exacta a PUBLIC_COUNTERS_ORIGINS). El modo off es el valor seguro por defecto de .env.example. Los valores PUBLIC se fijan al compilar; no son secretos. COUNTERS_ENABLED=true y el binding COUNTERS apuntan a la base real en wrangler.jsonc. PUBLIC_ORIGINS contiene los mismos dos orígenes para el Worker; PUBLIC_ORIGIN es el apex principal. La lista de producción permite únicamente https://danimon.party y https://danimon-web.pages.dev. El fallback singular se mantiene para pruebas locales. Las ramas de preview se compilan con los contadores apagados y sus hostnames no están autorizados.
 
 ## Acciones medidas
 
