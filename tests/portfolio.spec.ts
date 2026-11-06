@@ -44,6 +44,41 @@ for (const lang of ['en','es']) for (const width of [360,1440]) {
   });
 }
 
+test.describe('Mobile profile gestures', () => {
+  test.use({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  test('small trigger, long press suppressed and normal tap opens', async ({page}) => {
+    await page.goto('/es/');
+    const dock=page.locator('.profile-dock details');
+    const trigger=dock.locator('summary');
+    expect(await page.locator('.radio-inputs a').evaluateAll(links=>links.map(link=>link.getAttribute('href'))))
+      .toEqual(['#main','#projects','#about','#stack']);
+    const bounds=await trigger.boundingBox();
+    if (!bounds) throw new Error('Profile trigger missing');
+    expect(bounds.width).toBeLessThan(90);
+    expect(bounds.height).toBeLessThan(90);
+    const contextMenuAllowed=await trigger.evaluate(element=>element.dispatchEvent(
+      new MouseEvent('contextmenu',{bubbles:true,cancelable:true}),
+    ));
+    expect(contextMenuAllowed).toBe(false);
+    const session=await page.context().newCDPSession(page);
+    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{
+      x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2,
+    }]});
+    await page.waitForTimeout(750);
+    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await expect(dock).not.toHaveAttribute('open','');
+    await trigger.tap();
+    await expect(dock).toHaveAttribute('open','');
+    await page.locator('.email').tap();
+    await expect(page.locator('#mail-options')).toBeVisible();
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await page.setViewportSize({width:844,height:390});
+    await expect.poll(async()=> (await trigger.boundingBox())?.width ?? Infinity).toBeLessThan(90);
+  });
+});
+
 
 
 

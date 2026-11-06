@@ -1,6 +1,7 @@
 precision highp float;
 uniform float u_time;
 uniform vec2 u_resolution;
+uniform float u_horizontalScale;
 uniform vec2 u_mouse;
 varying vec2 v_texCoord;
 const bool cursorGlowEnabled = false;
@@ -40,6 +41,8 @@ void main() {
     if(length(u_mouse) < 1.0) {
         mouse = vec2(0.5, 0.5);
     }
+    st.x = (st.x - 0.5) * u_horizontalScale + 0.5;
+    mouse.x = (mouse.x - 0.5) * u_horizontalScale + 0.5;
     
     // Distance distortion from mouse
     float dist = distance(st, mouse);

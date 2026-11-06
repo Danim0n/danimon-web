@@ -29,9 +29,11 @@ function mount(canvas: HTMLCanvasElement) {
   gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
   const time = gl.getUniformLocation(program,'u_time');
   const resolution = gl.getUniformLocation(program,'u_resolution');
+  const horizontalScale = gl.getUniformLocation(program,'u_horizontalScale');
   const mouse = gl.getUniformLocation(program,'u_mouse');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let x=.5, y=.5, seconds=0, previous=0, frame=0;
+  let cropX=1;
   const controller = new AbortController();
   const options = {signal:controller.signal};
 
@@ -39,6 +41,7 @@ function mount(canvas: HTMLCanvasElement) {
     if (!gl) return;
     gl.viewport(0,0,canvas.width,canvas.height);
     gl.uniform2f(resolution,canvas.width,canvas.height);
+    gl.uniform1f(horizontalScale,cropX);
     gl.uniform2f(mouse,x*canvas.width,y*canvas.height);
     gl.uniform1f(time,seconds);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
@@ -56,6 +59,9 @@ function mount(canvas: HTMLCanvasElement) {
   }
   function resize() {
     const w=canvas.clientWidth,h=canvas.clientHeight;
+    // Portrait phones show the centre of the desktop scene, without stretching it
+    // or allocating an oversized offscreen canvas on a mobile GPU.
+    cropX=w<=740 && h>w ? (w/h)/(16/9) : 1;
     const scale=Math.min(1,Math.sqrt(1200000/Math.max(1,w*h)));
     canvas.width=Math.max(1,Math.round(w*scale));
     canvas.height=Math.max(1,Math.round(h*scale));
