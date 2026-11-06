@@ -6,12 +6,12 @@ const hosts = ['https://danimon.party', 'https://danimon-web.pages.dev'];
 const inertResponseCsp = "default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'";
 const pagePaths = [
   '/', '/es/', '/projects/local-events/', '/es/proyectos/eventos/',
-  '/demo/facturas/', '/es/demo/facturas/', '/privacy/', '/es/privacidad/',
+  '/demo/facturas/', '/es/demo/facturas/',
   '/cookies/', '/es/cookies/',
 ];
 const report = {
   checkedAt: new Date().toISOString(),
-  scope: 'Read-only release checks: 10 HTML pages + 404 per host, limited same-host assets, HEAD only for CV/API/admin, three invalid POSTs per host. No valid analytics event or CV GET.',
+  scope: 'Read-only release checks: 8 HTML pages + 404 per host, limited same-host assets, HEAD only for CV/API/admin, three invalid POSTs per host. No valid analytics event or CV GET.',
   hosts: [],
   totalHttpRequests: 0,
   limits: { maxHttpRequests: 40, maxSameHostAssetsPerHost: 3 },

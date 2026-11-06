@@ -8,7 +8,7 @@ const out = 'output/qa/domain-production';
 await mkdir(out, { recursive: true });
 const report = { at: new Date().toISOString(), pages: [], assets: [], checks: [], limitations: [] };
 const paths = ['/', '/es/', '/projects/local-events/', '/es/proyectos/eventos/',
-  '/demo/facturas/', '/es/demo/facturas/', '/privacy/', '/es/privacidad/', '/cookies/', '/es/cookies/'];
+  '/demo/facturas/', '/es/demo/facturas/', '/cookies/', '/es/cookies/'];
 const assets = new Set(['/invoice-ocr/worker.min.js', '/invoice-ocr/eng.traineddata.gz',
   '/invoice-ocr/tesseract-core-lstm.wasm.js', '/invoice-ocr/tesseract-core-simd-lstm.wasm.js',
   '/invoice-ocr/tesseract-core-relaxedsimd-lstm.wasm.js']);

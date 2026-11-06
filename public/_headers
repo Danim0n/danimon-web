@@ -22,12 +22,6 @@
 /es/demo/facturas/
   Cache-Control: public, max-age=0, must-revalidate, no-transform
 
-/privacy/
-  Cache-Control: public, max-age=0, must-revalidate, no-transform
-
-/es/privacidad/
-  Cache-Control: public, max-age=0, must-revalidate, no-transform
-
 /cookies/
   Cache-Control: public, max-age=0, must-revalidate, no-transform
 

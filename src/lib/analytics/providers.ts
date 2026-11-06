@@ -5,7 +5,7 @@ export function hasCloudflareBeacon(): boolean {
 export function safeCloudflareDocument(): boolean {
   if (location.search || location.hash) return false;
   const paths = ['/', '/es/', '/projects/local-events/', '/es/proyectos/eventos/',
-    '/demo/facturas/', '/es/demo/facturas/', '/privacy/', '/es/privacidad/', '/cookies/', '/es/cookies/'];
+    '/demo/facturas/', '/es/demo/facturas/', '/cookies/', '/es/cookies/'];
   if (!paths.includes(location.pathname)) return false;
   try {
     if (document.referrer) {

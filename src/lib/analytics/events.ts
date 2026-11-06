@@ -77,7 +77,6 @@ export function pageContext(): EventContext {
     '/': 'home', '/es/': 'home',
     '/projects/local-events/': 'local-events', '/es/proyectos/eventos/': 'local-events',
     '/demo/facturas/': 'invoice-reader', '/es/demo/facturas/': 'invoice-reader',
-    '/privacy/': 'privacy', '/es/privacidad/': 'privacy',
     '/cookies/': 'cookies', '/es/cookies/': 'cookies',
   };
   return { page_id: known[path] ?? 'not-found', language: document.documentElement.lang === 'es' ? 'es' : 'en' };
