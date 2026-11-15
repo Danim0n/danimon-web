@@ -4,10 +4,12 @@
   "compatibility_date": "2026-08-06",
   "send_metrics": false,
   "vars": {
+    "SITE_CONFIG_REQUIRED": "true",
     "PUBLIC_ORIGIN": "https://danimon.party", "PUBLIC_ORIGINS": "[\"https://danimon.party\",\"https://danimon-web.pages.dev\"]", "COUNTERS_ENABLED": "true",
     "PUBLIC_ANALYTICS_MODE": "production", "PUBLIC_COUNTERS_ORIGINS": "[\"https://danimon.party\",\"https://danimon-web.pages.dev\"]",
-    "PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED": "false", "NODE_VERSION": "24"
+    "PUBLIC_CLOUDFLARE_EXEMPTION_REVIEWED": "false", "PUBLIC_CLOUDFLARE_ORIGINS": "[]", "NODE_VERSION": "24"
   },
+  "kv_namespaces": [{ "binding": "SITE_CONFIG", "id": "6c90d76ae369453aa15e4795bcf85dd1" }],
   "d1_databases": [{
     "binding": "COUNTERS", "database_name": "danimon-counters",
     "database_id": "ccf6dfcb-d8ca-489b-b2e4-6b2326e388b2",

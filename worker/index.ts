@@ -1,15 +1,18 @@
-import type { D1Database } from '@cloudflare/workers-types';
+import type { D1Database, KVNamespace } from '@cloudflare/workers-types';
 import { validCounter, type CounterEvent } from '../src/lib/analytics/catalog';
 import { purgeExpiredCounters } from './retention-policy';
 import { createWriteBudget } from './write-budget';
 import { readBoundedBody } from './request-body';
 import { securityHeaders, inertResponseCsp } from '../src/lib/security-policy';
+import { maintenanceEnabled, maintenanceResponse } from './maintenance';
 export { createWriteBudget } from './write-budget';
 export { readBoundedBody } from './request-body';
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
   COUNTERS?: D1Database;
+  SITE_CONFIG?: KVNamespace;
+  SITE_CONFIG_REQUIRED?: string;
   PUBLIC_ORIGIN: string;
   PUBLIC_ORIGINS?: string;
   COUNTERS_ENABLED?: string;
@@ -88,6 +91,8 @@ export default {
   },
   async fetch(request: Request, env: Env, context: Context): Promise<Response> {
     try {
+      if ((!env.SITE_CONFIG && env.SITE_CONFIG_REQUIRED === 'true') || await maintenanceEnabled(env.SITE_CONFIG))
+        return maintenanceResponse(request);
       const url = new URL(request.url);
       if (url.pathname === '/api/interactions' && url.search) return response(400);
       if (url.pathname === '/api/interactions') return await collect(request, env);
